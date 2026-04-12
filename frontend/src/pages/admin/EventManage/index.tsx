@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, DatePicker, Select, Space, message } from 'antd';
-import dayjs from 'dayjs';
 import { eventService } from '../../../services/eventService';
 import { Event } from '../../../types/event';
 

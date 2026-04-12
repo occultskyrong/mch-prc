@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, InputNumber, Select, Space, message } from 'antd';
+import { Table, Button, Modal, Form, Input, InputNumber, Select, message } from 'antd';
 import { personService } from '../../../services/personService';
 import { Person } from '../../../types/person';
 

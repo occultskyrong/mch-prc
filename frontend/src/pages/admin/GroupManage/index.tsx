@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Space, message } from 'antd';
+import { Table, Button, Modal, Form, Input, Select, message } from 'antd';
 import { groupService } from '../../../services/groupService';
 import { Group } from '../../../types/group';
 

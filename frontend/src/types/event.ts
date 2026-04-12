@@ -9,6 +9,15 @@ export interface Event {
   detail?: { motive: string; process: string; result: string; impact: string };
 }
 
+export interface EventCreateInput {
+  title: string;
+  startDate: string;
+  endDate?: string;
+  isInstant?: boolean;
+  eventType?: string;
+  summaryContent?: string;
+}
+
 export interface EventListParams {
   current?: number;
   pageSize?: number;
