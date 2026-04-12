@@ -1,21 +1,6 @@
-import { useState } from 'react'
-import './App.css'
+import { RouterProvider } from 'react-router-dom';
+import { router } from './routes';
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <h1>MCH PRC Frontend</h1>
-        <div className="card">
-          <button onClick={() => setCount((count) => count + 1)}>
-            count is {count}
-          </button>
-        </div>
-      </div>
-    </>
-  )
+export default function App() {
+  return <RouterProvider router={router} />;
 }
-
-export default App
