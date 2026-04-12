@@ -5,6 +5,9 @@ import { getDatabaseConfig } from './config/database.config';
 import { GroupModule } from './group/group.module';
 import { PersonModule } from './person/person.module';
 import { EventModule } from './event/event.module';
+import { SourceModule } from './source/source.module';
+import { LocationModule } from './location/location.module';
+import { TimelineModule } from './timeline/timeline.module';
 
 @Module({
   imports: [
@@ -17,6 +20,9 @@ import { EventModule } from './event/event.module';
     GroupModule,
     PersonModule,
     EventModule,
+    SourceModule,
+    LocationModule,
+    TimelineModule,
   ],
 })
 export class AppModule {}
