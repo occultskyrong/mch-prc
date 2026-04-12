@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { getDatabaseConfig } from './config/database.config';
+import { GroupModule } from './group/group.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { getDatabaseConfig } from './config/database.config';
       useFactory: getDatabaseConfig,
       inject: [ConfigService],
     }),
+    GroupModule,
   ],
 })
 export class AppModule {}
