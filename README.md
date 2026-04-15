@@ -11,112 +11,116 @@
 
 ## 技术栈
 
-| 层级 | 技术 |
-|-----|-----|
-| 后端 | NestJS + TypeScript + TypeORM + PostgreSQL |
-| 前端 | React + TypeScript + Ant Design + Vite |
-| 数据交互 | RESTful API + Axios |
+纯静态前端架构：
+- React + TypeScript + Ant Design + Vite
+- 数据存储为 JSON 文件
 
 ## 项目结构
 
 ```
 mch-prc/
-├── backend/               # NestJS 后端
-│   ├── src/
-│   │   ├── event/         # 事件模块 (核心)
-│   │   ├── person/        # 人物模块
-│   │   ├── group/         # 群体模块
-│   │   ├── source/        # 史料模块
-│   │   ├── location/      # 地点模块
-│   │   ├── timeline/      # 时间轴模块
-│   │   └── common/        # 公共类
-│   └── .env               # 数据库配置
+├── src/
+│   ├── pages/
+│   │   ├── TimelinePage/      # 时间轴矩阵页
+│   │   └── EventDetailPage/   # 事件详情页
+│   ├── services/              # 数据读取服务
+│   ├── types/                 # TypeScript 类型定义
+│   ├── routes/                # 路由配置
+│   └── components/            # 公共组件
 │
-├── frontend/              # React 前端
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── TimelinePage/      # 时间轴矩阵页
-│   │   │   ├── EventDetailPage/   # 事件详情页
-│   │   │   └── admin/             # 管理后台
-│   │   ├── services/              # API 服务
-│   │   └── routes/                # 路由配置
-│   └── vite.config.ts            # Vite 配置
+├── public/
+│   └── data/                  # JSON 数据文件
+│       ├── events.json         # 历史事件数据
+│       ├── persons.json        # 人物数据
+│       ├── groups.json         # 群体数据
+│       └── sources.json        # 史料来源数据
 │
-└── docs/
-    └── superpowers/
-        ├── specs/                 # 设计文档
-        └── plans/                 # 实施计划
+├── package.json
+├── vite.config.ts
+└── index.html
 ```
 
 ## 快速开始
 
-### 1. 配置数据库
-
-创建 PostgreSQL 数据库：
-```sql
-CREATE DATABASE mch_prc;
-```
-
-修改 `backend/.env` 配置：
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=your_password
-DB_DATABASE=mch_prc
-```
-
-### 2. 启动后端
+### 安装依赖
 
 ```bash
-cd backend
 npm install
-npm run start:dev
 ```
 
-后端服务运行在 http://localhost:3000
-
-### 3. 启动前端
+### 启动开发服务器
 
 ```bash
-cd frontend
-npm install
 npm run dev
 ```
 
-前端服务运行在 http://localhost:5173
+访问 http://localhost:5173
 
-### 4. 访问应用
+### 构建生产版本
 
-- 时间轴页面: http://localhost:5173/timeline
-- 管理后台: http://localhost:5173/admin
-
-## API 接口
-
-| 模块 | 路径 | 说明 |
-|-----|------|-----|
-| 事件 | `/api/event` | 事件 CRUD、关联查询 |
-| 人物 | `/api/person` | 人物 CRUD、群体归属 |
-| 群体 | `/api/group` | 群体层级 CRUD |
-| 史料 | `/api/source` | 史料来源管理 |
-| 地点 | `/api/location` | 地理位置管理 |
-| 时间轴 | `/api/timeline/matrix` | 矩阵数据聚合 |
+```bash
+npm run build
+```
 
 ## 数据模型
 
-核心实体：
-- **Event**: 历史事件 (title, startDate, endDate, eventType)
-- **EventSummary**: 事件摘要 (content)
-- **EventDetail**: 事件细节 (motive, process, result, impact)
-- **Person**: 人物 (name, birthYear, deathYear, gender)
-- **Group**: 群体 (name, parentId, type) - 支持层级自关联
-- **Source**: 史料来源 (title, author, publisher, sourceType)
+### 事件 (Event)
+```json
+{
+  "id": 1,
+  "title": "鸦片战争",
+  "startDate": "1840-06-01",
+  "endDate": "1842-08-01",
+  "eventType": "战争",
+  "summary": "简要概述...",
+  "detail": {
+    "motive": "动机原因",
+    "process": "经过描述",
+    "result": "结果",
+    "impact": "影响"
+  },
+  "personIds": [1, 2, 3],
+  "relatedEvents": [2]
+}
+```
 
-关联关系：
-- PersonGroupRelation: 人物-群体归属（时间段）
-- PersonEventRelation: 人物-事件参与（角色）
-- EventRelation: 事件-事件关联（因果类型）
-- SourceRelation: 史料-内容引用
+### 人物 (Person)
+```json
+{
+  "id": 1,
+  "name": "林则徐",
+  "birthYear": 1785,
+  "deathYear": 1850,
+  "gender": "男",
+  "bioSummary": "生平简介",
+  "groupIds": [1]
+}
+```
+
+### 群体 (Group)
+```json
+{
+  "id": 1,
+  "name": "洋务派",
+  "parentId": null,
+  "type": "学派",
+  "description": "群体描述"
+}
+```
+
+## 已录入数据示例
+
+当前已录入 10 个重要历史事件：
+1. 鸦片战争 (1840-1842)
+2. 《南京条约》签订 (1842)
+3. 太平天国运动 (1851-1864)
+4. 洋务运动 (1861-1895)
+5. 甲午战争 (1894-1895)
+6. 戊戌变法 (1898)
+7. 辛亥革命 (1911-1912)
+8. 五四运动 (1919)
+9. 中国共产党成立 (1921)
+10. 中华人民共和国成立 (1949)
 
 ## License
 

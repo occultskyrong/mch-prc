@@ -1,0 +1,202 @@
+{
+  "persons": [
+    {
+      "id": 1,
+      "name": "林则徐",
+      "birthYear": 1785,
+      "deathYear": 1850,
+      "gender": "男",
+      "bioSummary": "清朝官员，虎门销烟的主要执行者，被誉为民族英雄。",
+      "groupIds": [1]
+    },
+    {
+      "id": 2,
+      "name": "道光帝",
+      "birthYear": 1782,
+      "deathYear": 1850,
+      "gender": "男",
+      "bioSummary": "清朝第八位皇帝，鸦片战争期间的决策者。",
+      "groupIds": [2]
+    },
+    {
+      "id": 3,
+      "name": "琦善",
+      "birthYear": 1786,
+      "deathYear": 1854,
+      "gender": "男",
+      "bioSummary": "清朝官员，鸦片战争期间与英国谈判的代表。",
+      "groupIds": [2]
+    },
+    {
+      "id": 4,
+      "name": "耆英",
+      "birthYear": 1790,
+      "deathYear": 1858,
+      "gender": "男",
+      "bioSummary": "清朝官员，签订《南京条约》的清方代表。",
+      "groupIds": [2]
+    },
+    {
+      "id": 5,
+      "name": "洪秀全",
+      "birthYear": 1814,
+      "deathYear": 1864,
+      "gender": "男",
+      "bioSummary": "太平天国领袖，创立拜上帝教，发动金田起义。",
+      "groupIds": [3]
+    },
+    {
+      "id": 6,
+      "name": "杨秀清",
+      "birthYear": 1823,
+      "deathYear": 1856,
+      "gender": "男",
+      "bioSummary": "太平天国东王，仅次于洪秀全的重要人物。",
+      "groupIds": [3]
+    },
+    {
+      "id": 7,
+      "name": "曾国藩",
+      "birthYear": 1811,
+      "deathYear": 1872,
+      "gender": "男",
+      "bioSummary": "清朝官员，创建湘军镇压太平天国，洋务运动先驱。",
+      "groupIds": [4, 1]
+    },
+    {
+      "id": 8,
+      "name": "李鸿章",
+      "birthYear": 1823,
+      "deathYear": 1901,
+      "gender": "男",
+      "bioSummary": "清朝重臣，洋务运动核心人物，创建淮军、北洋舰队。",
+      "groupIds": [4, 1]
+    },
+    {
+      "id": 9,
+      "name": "左宗棠",
+      "birthYear": 1812,
+      "deathYear": 1885,
+      "gender": "男",
+      "bioSummary": "清朝官员，洋务运动参与者，收复新疆。",
+      "groupIds": [4, 1]
+    },
+    {
+      "id": 10,
+      "name": "张之洞",
+      "birthYear": 1837,
+      "deathYear": 1909,
+      "gender": "男",
+      "bioSummary": "清朝官员，洋务运动后期重要人物，创办汉阳铁厂等。",
+      "groupIds": [4, 1]
+    },
+    {
+      "id": 11,
+      "name": "光绪帝",
+      "birthYear": 1871,
+      "deathYear": 1908,
+      "gender": "男",
+      "bioSummary": "清朝第十一位皇帝，支持戊戌变法，后被慈禧囚禁。",
+      "groupIds": [2]
+    },
+    {
+      "id": 12,
+      "name": "慈禧太后",
+      "birthYear": 1835,
+      "deathYear": 1908,
+      "gender": "女",
+      "bioSummary": "清朝实际统治者，垂帘听政近半个世纪。",
+      "groupIds": [2]
+    },
+    {
+      "id": 13,
+      "name": "康有为",
+      "birthYear": 1858,
+      "deathYear": 1927,
+      "gender": "男",
+      "bioSummary": "维新派领袖，戊戌变法的主要推动者。",
+      "groupIds": [5]
+    },
+    {
+      "id": 14,
+      "name": "梁启超",
+      "birthYear": 1873,
+      "deathYear": 1929,
+      "gender": "男",
+      "bioSummary": "维新派重要人物，康有为的学生，戊戌变法参与者。",
+      "groupIds": [5]
+    },
+    {
+      "id": 15,
+      "name": "谭嗣同",
+      "birthYear": 1865,
+      "deathYear": 1898,
+      "gender": "男",
+      "bioSummary": "维新派人物，戊戌六君子之一，变法失败后殉难。",
+      "groupIds": [5]
+    },
+    {
+      "id": 16,
+      "name": "孙中山",
+      "birthYear": 1866,
+      "deathYear": 1925,
+      "gender": "男",
+      "bioSummary": "革命先行者，创立同盟会，领导辛亥革命，建立中华民国。",
+      "groupIds": [6]
+    },
+    {
+      "id": 17,
+      "name": "黄兴",
+      "birthYear": 1874,
+      "deathYear": 1916,
+      "gender": "男",
+      "bioSummary": "革命家，同盟会重要成员，多次领导起义。",
+      "groupIds": [6]
+    },
+    {
+      "id": 18,
+      "name": "陈独秀",
+      "birthYear": 1879,
+      "deathYear": 1942,
+      "gender": "男",
+      "bioSummary": "新文化运动领袖，创办《新青年》，五四运动推动者。",
+      "groupIds": [7]
+    },
+    {
+      "id": 19,
+      "name": "李大钊",
+      "birthYear": 1889,
+      "deathYear": 1927,
+      "gender": "男",
+      "bioSummary": "马克思主义传播者，中国共产党创始人之一。",
+      "groupIds": [7]
+    },
+    {
+      "id": 20,
+      "name": "毛泽东",
+      "birthYear": 1893,
+      "deathYear": 1976,
+      "gender": "男",
+      "bioSummary": "中国共产党领袖，中华人民共和国创建者。",
+      "groupIds": [7]
+    },
+    {
+      "id": 21,
+      "name": "周恩来",
+      "birthYear": 1898,
+      "deathYear": 1976,
+      "gender": "男",
+      "bioSummary": "中国共产党重要领导人，开国总理。",
+      "groupIds": [7]
+    },
+    {
+      "id": 22,
+      "name": "董必武",
+      "birthYear": 1886,
+      "deathYear": 1975,
+      "gender": "男",
+      "bioSummary": "中国共产党创始人之一，参加过中共一大。",
+      "groupIds": [7]
+    }
+  ]
+}

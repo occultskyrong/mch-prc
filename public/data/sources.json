@@ -1,0 +1,49 @@
+{
+  "sources": [
+    {
+      "id": 1,
+      "title": "《中国近代史》",
+      "author": "蒋廷黻",
+      "publisher": "上海古籍出版社",
+      "publishYear": 2006,
+      "url": null,
+      "sourceType": "书籍"
+    },
+    {
+      "id": 2,
+      "title": "《从鸦片战争到五四运动》",
+      "author": "胡绳",
+      "publisher": "人民出版社",
+      "publishYear": 1981,
+      "url": null,
+      "sourceType": "书籍"
+    },
+    {
+      "id": 3,
+      "title": "《中国近代通史》",
+      "author": "中国社会科学院近代史研究所",
+      "publisher": "江苏人民出版社",
+      "publishYear": 2006,
+      "url": null,
+      "sourceType": "书籍"
+    },
+    {
+      "id": 4,
+      "title": "《清史稿》",
+      "author": "赵尔巽",
+      "publisher": "中华书局",
+      "publishYear": 1977,
+      "url": null,
+      "sourceType": "档案"
+    },
+    {
+      "id": 5,
+      "title": "百度百科",
+      "author": "百度百科编辑部",
+      "publisher": "百度百科",
+      "publishYear": null,
+      "url": "https://baike.baidu.com",
+      "sourceType": "网站"
+    }
+  ]
+}
