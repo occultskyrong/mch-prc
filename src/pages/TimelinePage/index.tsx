@@ -327,18 +327,23 @@ export default function TimelinePage() {
       dataIndex: 'period',
       key: 'period',
       fixed: 'left' as const,
-      width: 32,
+      width: 40,
       render: (period: typeof HISTORICAL_PERIODS[0] | undefined, row: any) => {
         if (!period) return null;
         // 只在每个时期的第一年显示时期名称
         const year = row.year;
         if (year !== period.startYear) return null;
-        // 竖排文字展示
-        const chars = period.name.split('');
+        // 竖排文字展示，包含时期名称和年份范围
+        const nameChars = period.name.split('');
+        const yearsChars = period.years.split('');
         return (
-          <div className="period-vertical-text" style={{ color: period.color }}>
-            {chars.map((char, i) => (
-              <span key={i} style={{ display: 'block', fontSize: 11, lineHeight: 1.3, fontWeight: 600 }}>{char}</span>
+          <div className="period-vertical-text" style={{ color: period.color, paddingTop: 4 }}>
+            {nameChars.map((char, i) => (
+              <span key={`name-${i}`} style={{ display: 'block', fontSize: 11, lineHeight: 1.3, fontWeight: 600 }}>{char}</span>
+            ))}
+            <span style={{ display: 'block', fontSize: 10, lineHeight: 1.3, marginTop: 4, fontWeight: 400, color: '#666' }}>-</span>
+            {yearsChars.map((char, i) => (
+              <span key={`years-${i}`} style={{ display: 'block', fontSize: 10, lineHeight: 1.2, fontWeight: 400, color: '#666' }}>{char}</span>
             ))}
           </div>
         );
@@ -352,7 +357,16 @@ export default function TimelinePage() {
         const rowSpan = isFirstYear ? periodYears.length : 0;
         return {
           rowSpan,
-          style: { backgroundColor: `${period.color}08`, borderLeft: `3px solid ${period.color}`, verticalAlign: 'middle', textAlign: 'center', padding: '8px 4px' }
+          style: {
+            backgroundColor: `${period.color}08`,
+            borderLeft: `3px solid ${period.color}`,
+            verticalAlign: 'top',  // 改为顶部对齐，确保时期标题可见
+            textAlign: 'center',
+            padding: '8px 4px',
+            position: 'sticky',
+            left: 0,
+            zIndex: 2
+          }
         };
       }
     };
@@ -363,13 +377,16 @@ export default function TimelinePage() {
       dataIndex: 'year',
       key: 'year',
       fixed: 'left' as const,
-      width: 60,
+      width: 50,
       render: (year: number) => {
         const period = getPeriodByYear(year);
         return (
           <span style={{ fontWeight: 600, color: period?.color || '#1890ff' }}>{year}</span>
         );
-      }
+      },
+      onCell: () => ({
+        style: { position: 'sticky', left: 40, zIndex: 1 }
+      })
     };
 
     // 群体/人物列

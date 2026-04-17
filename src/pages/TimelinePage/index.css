@@ -429,7 +429,23 @@
 .period-vertical-text {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  gap: 1px;
+  gap: 0;
+}
+
+/* 确保固定列正确显示 */
+.ant-table-wrapper .ant-table-fixed-left {
+  position: sticky !important;
+  z-index: 10;
+}
+
+.ant-table-wrapper .ant-table-thead > tr > th.ant-table-cell-fix-left {
+  position: sticky !important;
+  z-index: 10;
+}
+
+.ant-table-wrapper .ant-table-tbody > tr > td.ant-table-cell-fix-left {
+  position: sticky !important;
+  z-index: 10;
 }
