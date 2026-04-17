@@ -360,12 +360,13 @@ export default function TimelinePage() {
           style: {
             backgroundColor: `${period.color}08`,
             borderLeft: `3px solid ${period.color}`,
-            verticalAlign: 'top',  // 改为顶部对齐，确保时期标题可见
+            verticalAlign: 'top',
             textAlign: 'center',
-            padding: '8px 4px',
+            padding: '4px 2px',
             position: 'sticky',
             left: 0,
-            zIndex: 2
+            zIndex: 10,
+            background: `${period.color}08`  // 确固定列有背景色
           }
         };
       }
@@ -385,7 +386,7 @@ export default function TimelinePage() {
         );
       },
       onCell: () => ({
-        style: { position: 'sticky', left: 40, zIndex: 1 }
+        style: { position: 'sticky', left: 40, zIndex: 9, background: '#fff' }
       })
     };
 
@@ -637,7 +638,7 @@ export default function TimelinePage() {
           <Table
             columns={matrixColumns}
             dataSource={matrixDataSource}
-            scroll={{ x: 'max-content', y: 'calc(100vh - 180px)' }}
+            scroll={{ x: 'max-content', y: 'calc(100vh - 140px)' }}
             bordered
             size="small"
             pagination={false}
