@@ -608,6 +608,24 @@ export default function TimelinePage() {
       </div>
       )}
 
+      {/* 颜色说明图例 */}
+      {(!isMobile || headerExpanded) && (
+        <div className="color-legend">
+          <div className="legend-section">
+            <span className="legend-title">事件类型:</span>
+            {Object.entries(EVENT_TYPE_COLORS).map(([type, color]) => (
+              <Tag key={type} color={color} style={{ fontSize: 11, margin: '2px' }}>{type}</Tag>
+            ))}
+          </div>
+          <div className="legend-section">
+            <span className="legend-title">群体:</span>
+            {Object.entries(GROUP_COLORS).slice(0, 8).map(([name, color]) => (
+              <Tag key={name} color={color} style={{ fontSize: 11, margin: '2px' }}>{name}</Tag>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 主内容区 */}
       <div className="timeline-content">
         {loading ? (

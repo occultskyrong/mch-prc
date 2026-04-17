@@ -314,6 +314,16 @@
 
 /* 响应式 */
 @media (max-width: 768px) {
+  .color-legend {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .legend-section {
+    flex-wrap: wrap;
+  }
+
   .mobile-header-toggle {
     background: #fff;
     padding: 8px 16px;
@@ -432,6 +442,28 @@
   justify-content: flex-start;
   align-items: center;
   gap: 0;
+}
+
+/* 颜色说明图例 */
+.color-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 24px;
+  background: #fafafa;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.legend-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-title {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
 }
 
 /* 确保固定列正确显示 */
