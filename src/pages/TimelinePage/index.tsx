@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Select, Input, Tag, Drawer, Descriptions, Typography, Space, Button, Tooltip, Empty, Table, Divider, Segmented } from 'antd';
-import { SearchOutlined, CalendarOutlined, UserOutlined, TeamOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Select, Input, Tag, Drawer, Descriptions, Typography, Space, Button, Tooltip, Empty, Table } from 'antd';
+import { SearchOutlined, CalendarOutlined, UserOutlined, TeamOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import './index.css';
 import { eventService } from '../../services/eventService';
@@ -16,7 +16,7 @@ const HISTORICAL_PERIODS = [
   { key: '02', name: '洋务运动时期', years: '1861-1894', startYear: 1861, endYear: 1894, color: '#1890ff', description: '总理衙门设立、洋务运动推行、江南制造总局、中法战争、甲午战争爆发' },
   { key: '03', name: '甲午战后时期', years: '1895-1900', startYear: 1895, endYear: 1900, color: '#fa8c16', description: '马关条约、戊戌变法、义和团运动、八国联军、辛丑条约' },
   { key: '04', name: '清末新政时期', years: '1901-1911', startYear: 1901, endYear: 1911, color: '#52c41a', description: '清末新政、废除科举、预备立宪、徐锡麟起义、辛亥革命' },
-  { key: '05', name: '民国初期', years: '1912-1927', startYear: 1912, endYear: 1927, color: '#722ed1', description: '民国成立、袁世凯称帝、五四运动、中共成立、北伐战争' },
+  { key: '05', name: '民国初期', years: '1912-1926', startYear: 1912, endYear: 1926, color: '#722ed1', description: '民国成立、袁世凯称帝、五四运动、中共成立、北伐战争' },
   { key: '06', name: '国民政府时期', years: '1927-1949', startYear: 1927, endYear: 1949, color: '#eb2f96', description: '中原大战、长征、遵义会议、西安事变、抗日战争、解放战争' },
 ];
 
@@ -39,6 +39,11 @@ const GROUP_COLORS: Record<string, string> = {
   '革命派': '#eb2f96',
   '中国共产党': '#f5222d',
   '英军': '#1890ff',
+  '国民党': '#fa8c16',
+  '日本侵略军': '#722ed1',
+  '解放军': '#52c41a',
+  '东北军': '#13c2c2',
+  '西北军': '#eb2f96',
 };
 
 export default function TimelinePage() {
@@ -83,7 +88,7 @@ export default function TimelinePage() {
     setLoading(true);
     try {
       const [eventsRes, personsRes, groupsRes] = await Promise.all([
-        eventService.list({ pageSize: 1000 }),
+        eventService.list({ pageSize: 0 }),  // 获取全部数据
         personService.list(),
         groupService.list(),
       ]);
@@ -127,15 +132,6 @@ export default function TimelinePage() {
       return true;
     }).sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
   }, [events, startYear, endYear, searchText, eventTypeFilter, groupFilter, persons]);
-
-  // 生成年份列
-  const yearColumns = useMemo(() => {
-    const years: number[] = [];
-    for (let y = startYear; y <= endYear; y++) {
-      years.push(y);
-    }
-    return years;
-  }, [startYear, endYear]);
 
   // 按年份构建矩阵数据（时间上下，群体左右）
   const matrixByYearGroup = useMemo(() => {
@@ -224,6 +220,11 @@ export default function TimelinePage() {
     return rows;
   }, [persons, filteredEvents]);
 
+  // 矩阵数据源
+  const matrixDataSource = useMemo(() => {
+    return viewMode === 'matrix-group' ? matrixByYearGroup : matrixByYearPerson;
+  }, [viewMode, matrixByYearGroup, matrixByYearPerson]);
+
   // 按群体分组（列表视图）
   const eventsByGroup = useMemo(() => {
     const map: Record<number, { group: any; events: Event[] }> = {};
@@ -235,7 +236,7 @@ export default function TimelinePage() {
       const eventPersonIds = e.personIds || [];
       const eventPersons = persons.filter(p => eventPersonIds.includes(p.id));
       const eventGroupIds = eventPersons.flatMap(p => p.groupIds || []);
-      eventGroupIds.forEach(gid => {
+      eventGroupIds.forEach((gid: number) => {
         if (map[gid]) {
           map[gid].events.push(e);
         }
@@ -299,16 +300,6 @@ export default function TimelinePage() {
     return years;
   }, []);
 
-  // 时期选项
-  const periodOptions = useMemo(() => {
-    return HISTORICAL_PERIODS.map(p => ({
-      label: p.name,
-      value: p.key,
-      description: p.description,
-      years: p.years,
-    }));
-  }, []);
-
   // 矩阵表格列配置（时间上下，群体/人物左右）
   const matrixColumns = useMemo(() => {
     // 时期列（左侧固定，显示时期名称）
@@ -366,8 +357,8 @@ export default function TimelinePage() {
       const groupIdsWithEvents = new Set<number>();
       filteredEvents.forEach(e => {
         const eventPersons = persons.filter(p => e.personIds?.includes(p.id));
-        eventPersons.forEach(p => {
-          p.groupIds?.forEach(gid => groupIdsWithEvents.add(gid));
+        eventPersons.forEach((p: any) => {
+          (p.groupIds || []).forEach((gid: number) => groupIdsWithEvents.add(gid));
         });
       });
 
@@ -451,12 +442,7 @@ export default function TimelinePage() {
     }
 
     return [periodCol, yearCol, ...cols];
-  }, [groups, persons, filteredEvents, viewMode]);
-
-  // 矩阵数据源
-  const matrixDataSource = useMemo(() => {
-    return viewMode === 'matrix-group' ? matrixByYearGroup : matrixByYearPerson;
-  }, [viewMode, matrixByYearGroup, matrixByYearPerson]);
+  }, [groups, persons, filteredEvents, viewMode, matrixDataSource]);
 
   return (
     <div className="timeline-page">

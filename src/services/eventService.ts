@@ -18,8 +18,12 @@ export const eventService = {
     if (params?.title) {
       filtered = filtered.filter(e => e.title.includes(params.title!));
     }
+    // 如果 pageSize 不指定或为 0，返回全部数据
+    if (!params?.pageSize) {
+      return { data: filtered, count: filtered.length };
+    }
     const page = params?.page || 1;
-    const pageSize = params?.pageSize || 20;
+    const pageSize = params.pageSize;
     const start = (page - 1) * pageSize;
     return { data: filtered.slice(start, start + pageSize), count: filtered.length };
   },

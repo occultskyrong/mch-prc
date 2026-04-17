@@ -3,58 +3,81 @@
     {
       "id": 1,
       "name": "洋务派",
-      "parentId": null,
       "type": "学派",
       "description": "主张学习西方技术、创办近代工业的官员群体，以曾国藩、李鸿章、左宗棠、张之洞为代表。"
     },
     {
       "id": 2,
       "name": "清廷",
-      "parentId": null,
       "type": "党派",
       "description": "清朝统治集团，以皇帝、慈禧太后及各级官员组成。"
     },
     {
       "id": 3,
       "name": "太平天国",
-      "parentId": null,
       "type": "其他",
       "description": "洪秀全创立的农民起义政权，以拜上帝教为信仰基础。"
     },
     {
       "id": 4,
       "name": "湘淮系",
-      "parentId": 1,
       "type": "学派",
-      "description": "洋务派中以湘军、淮军为核心的派系，曾国藩、李鸿章为代表。"
+      "description": "洋务派中以湘军、淮军为核心的派系，曾国藩、李鸿章为代表。",
+      "parentId": 1
     },
     {
       "id": 5,
       "name": "维新派",
-      "parentId": null,
       "type": "党派",
       "description": "主张君主立宪、变法改革的政治力量，康有为、梁启超为代表。"
     },
     {
       "id": 6,
       "name": "革命派",
-      "parentId": null,
       "type": "党派",
       "description": "主张推翻清朝、建立共和的革命力量，孙中山、黄兴为代表。"
     },
     {
       "id": 7,
       "name": "中国共产党",
-      "parentId": null,
       "type": "党派",
       "description": "无产阶级政党，1921年成立，领导中国人民进行革命斗争。"
     },
     {
       "id": 8,
       "name": "英军",
-      "parentId": null,
       "type": "其他",
       "description": "英国军队及外交人员，鸦片战争期间的侵略者。"
+    },
+    {
+      "id": 9,
+      "name": "国民党",
+      "type": "党派",
+      "description": "中国国民党，孙中山创立，蒋介石领导的执政党。"
+    },
+    {
+      "id": 10,
+      "name": "日本侵略军",
+      "type": "其他",
+      "description": "日本军队，抗日战争及二战期间的侵略者。"
+    },
+    {
+      "id": 11,
+      "name": "解放军",
+      "type": "其他",
+      "description": "中国人民解放军，中共领导的革命军队。"
+    },
+    {
+      "id": 12,
+      "name": "东北军",
+      "type": "其他",
+      "description": "张学良领导的奉系军阀部队。"
+    },
+    {
+      "id": 13,
+      "name": "西北军",
+      "type": "其他",
+      "description": "杨虎城领导的西北地方军阀部队。"
     }
   ]
 }
