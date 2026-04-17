@@ -5,12 +5,13 @@ export interface Event {
   endDate?: string;
   isInstant: boolean;
   eventType: string;
+  location?: string;
   summary: string;  // 简要概述
   detail?: {
-    motive: string;
-    process: string;
-    result: string;
-    impact: string;
+    motive?: string;
+    process?: string;
+    result?: string;
+    impact?: string;
   };
   personIds?: number[];  // 参与人物ID
   relatedEvents?: number[];  // 关联事件ID

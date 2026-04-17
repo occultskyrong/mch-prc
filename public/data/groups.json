@@ -48,6 +48,13 @@
       "parentId": null,
       "type": "党派",
       "description": "无产阶级政党，1921年成立，领导中国人民进行革命斗争。"
+    },
+    {
+      "id": 8,
+      "name": "英军",
+      "parentId": null,
+      "type": "其他",
+      "description": "英国军队及外交人员，鸦片战争期间的侵略者。"
     }
   ]
 }

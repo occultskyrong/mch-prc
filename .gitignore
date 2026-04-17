@@ -7,9 +7,6 @@ dist/
 # TypeScript build cache
 *.tsbuildinfo
 
-# Raw data (本地采集数据，不提交)
-raw/
-
 # IDE
 .idea/
 .vscode/
