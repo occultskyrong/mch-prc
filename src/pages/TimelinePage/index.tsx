@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Select, Input, Tag, Drawer, Descriptions, Typography, Space, Button, Tooltip, Empty, Table } from 'antd';
-import { SearchOutlined, CalendarOutlined, UserOutlined, TeamOutlined } from '@ant-design/icons';
+import { SearchOutlined, CalendarOutlined, UserOutlined, TeamOutlined, MenuOutlined, CloseOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import './index.css';
 import { eventService } from '../../services/eventService';
@@ -52,6 +52,10 @@ export default function TimelinePage() {
   const [groups, setGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // 移动端头部显示状态
+  const [headerExpanded, setHeaderExpanded] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
   // 筛选条件
   const [searchText, setSearchText] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
@@ -63,6 +67,21 @@ export default function TimelinePage() {
 
   // 详情抽屉
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+
+  // 移动端检测
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // 移动端默认收缩头部
+      if (mobile) {
+        setHeaderExpanded(false);
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // 当选择时期时，自动设置年份范围
   useEffect(() => {
@@ -302,22 +321,25 @@ export default function TimelinePage() {
 
   // 矩阵表格列配置（时间上下，群体/人物左右）
   const matrixColumns = useMemo(() => {
-    // 时期列（左侧固定，显示时期名称）
+    // 时期列（左侧固定，显示时期名称，竖排文字）
     const periodCol = {
       title: '时期',
       dataIndex: 'period',
       key: 'period',
       fixed: 'left' as const,
-      width: 90,
+      width: 32,
       render: (period: typeof HISTORICAL_PERIODS[0] | undefined, row: any) => {
         if (!period) return null;
         // 只在每个时期的第一年显示时期名称
         const year = row.year;
         if (year !== period.startYear) return null;
+        // 竖排文字展示
+        const chars = period.name.split('');
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '4px 0' }}>
-            <span style={{ fontWeight: 600, color: period.color, fontSize: 12, lineHeight: 1.2 }}>{period.name}</span>
-            <span style={{ color: '#666', fontSize: 11, lineHeight: 1.2 }}>{period.years}</span>
+          <div className="period-vertical-text" style={{ color: period.color }}>
+            {chars.map((char, i) => (
+              <span key={i} style={{ display: 'block', fontSize: 11, lineHeight: 1.3, fontWeight: 600 }}>{char}</span>
+            ))}
           </div>
         );
       },
@@ -330,7 +352,7 @@ export default function TimelinePage() {
         const rowSpan = isFirstYear ? periodYears.length : 0;
         return {
           rowSpan,
-          style: { backgroundColor: `${period.color}08`, borderLeft: `3px solid ${period.color}`, verticalAlign: 'top' }
+          style: { backgroundColor: `${period.color}08`, borderLeft: `3px solid ${period.color}`, verticalAlign: 'middle', textAlign: 'center', padding: '8px 4px' }
         };
       }
     };
@@ -446,8 +468,22 @@ export default function TimelinePage() {
 
   return (
     <div className="timeline-page">
+      {/* 移动端头部切换按钮 */}
+      {isMobile && (
+        <div className="mobile-header-toggle">
+          <Button
+            type="text"
+            icon={headerExpanded ? <CloseOutlined /> : <MenuOutlined />}
+            onClick={() => setHeaderExpanded(!headerExpanded)}
+            style={{ fontSize: 18 }}
+          />
+          <span className="mobile-title">中国近代史时间轴</span>
+        </div>
+      )}
+
       {/* 时期概览 */}
-      <div className="period-overview">
+      {(!isMobile || headerExpanded) && (
+        <div className="period-overview">
         {HISTORICAL_PERIODS.map(period => (
           <Tooltip key={period.key} title={`${period.years}: ${period.description}`}>
             <div
@@ -462,9 +498,11 @@ export default function TimelinePage() {
           </Tooltip>
         ))}
       </div>
+      )}
 
       {/* 顶部筛选栏 */}
-      <div className="filter-bar">
+      {(!isMobile || headerExpanded) && (
+        <div className="filter-bar">
         <div className="filter-left">
           <Input
             placeholder="搜索事件..."
@@ -551,6 +589,7 @@ export default function TimelinePage() {
           共 {filteredEvents.length} 个事件
         </div>
       </div>
+      )}
 
       {/* 主内容区 */}
       <div className="timeline-content">
