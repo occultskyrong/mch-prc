@@ -312,6 +312,43 @@
   color: #333;
 }
 
+/* 年份事件列表 */
+.year-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.year-event-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fafafa;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.year-event-item:hover {
+  background: #e6f7ff;
+  transform: translateX(4px);
+}
+
+.year-event-date {
+  color: #666;
+  font-size: 13px;
+  min-width: 60px;
+}
+
+.year-event-title {
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* 响应式 */
 @media (max-width: 768px) {
   .color-legend {

@@ -67,6 +67,7 @@ export default function TimelinePage() {
 
   // 详情抽屉
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   // 移动端检测
   useEffect(() => {
@@ -382,7 +383,17 @@ export default function TimelinePage() {
       render: (year: number) => {
         const period = getPeriodByYear(year);
         return (
-          <span style={{ fontWeight: 600, color: period?.color || '#1890ff' }}>{year}</span>
+          <span
+            style={{
+              fontWeight: 600,
+              color: period?.color || '#1890ff',
+              cursor: 'pointer',
+              textDecoration: 'underline'
+            }}
+            onClick={() => setSelectedYear(year)}
+          >
+            {year}
+          </span>
         );
       },
       onCell: () => ({
@@ -766,6 +777,41 @@ export default function TimelinePage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+      </Drawer>
+
+      {/* 年份事件列表抽屉 */}
+      <Drawer
+        title={`${selectedYear}年事件列表`}
+        placement="right"
+        width={400}
+        open={!!selectedYear}
+        onClose={() => setSelectedYear(null)}
+      >
+        {selectedYear && (
+          <div className="year-event-list">
+            {filteredEvents
+              .filter(e => new Date(e.startDate).getFullYear() === selectedYear)
+              .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+              .map(event => (
+                <div
+                  key={event.id}
+                  className="year-event-item"
+                  onClick={() => {
+                    setSelectedYear(null);
+                    setSelectedEvent(event);
+                  }}
+                >
+                  <div className="year-event-date">
+                    {dayjs(event.startDate).format('M月D日')}
+                  </div>
+                  <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>
+                    {event.eventType}
+                  </Tag>
+                  <div className="year-event-title">{event.title}</div>
+                </div>
+              ))}
           </div>
         )}
       </Drawer>
