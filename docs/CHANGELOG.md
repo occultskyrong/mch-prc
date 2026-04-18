@@ -1,5 +1,112 @@
 # 版本迭代日志
 
+## v1.3.0 (规划)
+
+**目标**: 重构项目架构，前后端分离，MongoDB 数据持久化
+
+### 架构变更
+
+| 项目 | v1.x | v1.3.0 |
+|------|------|--------|
+| 架构 | 纯静态前端 | 前后端分离（两个独立项目） |
+| 数据存储 | JSON 文件 | MongoDB |
+| 后端服务 | 无 | NestJS |
+| API | 无 | RESTful API |
+
+### 项目结构（单仓库，前后端分离文件夹）
+
+```
+mch-prc/
+├── frontend/                    # 前端项目
+│   ├── src/
+│   │   ├── pages/
+│   │   ├── services/            # 改为调用后端API
+│   │   ├── types/
+│   │   └── components/
+│   ├── public/
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── .env                     # VITE_API_BASE_URL
+│
+├── backend/                     # 后端项目
+│   ├── src/
+│   │   ├── modules/
+│   │   │   ├── events/
+│   │   │   │   ├── events.controller.ts
+│   │   │   │   ├── events.service.ts
+│   │   │   │   ├── events.schema.ts
+│   │   │   │   └── events.dto.ts
+│   │   │   ├── persons/
+│   │   │   ├── groups/
+│   │   │   └── periods/
+│   │   ├── common/
+│   │   ├── app.module.ts
+│   │   └── main.ts
+│   ├── scripts/
+│   │   └── migrate-to-mongo.ts
+│   ├── package.json
+│   ├── nest-cli.json
+│   └── .env                     # MongoDB配置
+│
+├── raw/                         # 原始Markdown数据（保留）
+├── docs/                        # 文档
+├── .gitignore
+└── README.md
+```
+
+### API 接口
+
+| 接口 | 方法 | 描述 |
+|------|------|------|
+| `/api/events` | GET | 事件列表（分页、筛选） |
+| `/api/events/:id` | GET | 事件详情 |
+| `/api/events` | POST | 创建事件 |
+| `/api/events/:id` | PUT | 更新事件 |
+| `/api/events/:id` | DELETE | 删除事件 |
+| `/api/persons` | GET | 人物列表 |
+| `/api/groups` | GET | 群体列表 |
+
+### MongoDB Schema
+
+**Event**:
+
+```typescript
+{
+  title: String,
+  startDate: Date,
+  endDate: Date,
+  eventType: String,
+  location: String,
+  summary: String,
+  detail: { motive, process, result, impact },
+  impactFactor: Number,
+  periodId: ObjectId,
+  personIds: [ObjectId],
+  subEvents: [{ title, date, content }],
+  source: String
+}
+```
+
+**Person**:
+
+```typescript
+{
+  name: String,
+  birthYear: Number,
+  deathYear: Number,
+  gender: String,
+  bioSummary: String,
+  groupIds: [ObjectId]
+}
+```
+
+### 数据迁移
+
+- 从 `mch-prc/public/data/*.json` 迁移到 MongoDB
+- 编写迁移脚本 `migrate-to-mongo.ts`
+
+---
+
 ## 当前版本: v1.2.0
 
 **发布日期**: 2026-04-18
