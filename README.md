@@ -153,6 +153,12 @@ npm run build
 - **Feature 2**: 基于RAG的事件关联发现（向量检索+LLM分析）
 - **Feature 3**: 历史事件关系图谱可视化（D3.js/G6图可视化）
 
+## 版本日志
+
+详见 [docs/CHANGELOG.md](docs/CHANGELOG.md)
+
+**当前版本**: v1.2.0
+
 ## 部署
 
 ```bash
