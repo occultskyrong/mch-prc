@@ -10,24 +10,17 @@ export const timelineService = {
     const startYear = startDate.getFullYear();
     const endYear = endDate.getFullYear();
 
-    // 生成时间列
     const columns: string[] = [];
     for (let year = startYear; year <= endYear; year++) {
       columns.push(String(year));
     }
 
-    // 获取数据
     const eventsResult = await eventService.list();
     const events = eventsResult.data;
 
-    // 获取人物和群体数据
-    const personsResult = await personService.list();
-    const persons = personsResult.data;
+    const persons = await personService.list();
+    const groups = await groupService.list();
 
-    const groupsResult = await groupService.list();
-    const groups = groupsResult.data;
-
-    // 筛选时间范围内的事件
     const filteredEvents = events.filter(e => {
       const eventStart = new Date(e.startDate);
       return eventStart >= startDate && eventStart <= endDate;
@@ -37,16 +30,14 @@ export const timelineService = {
 
     if (groupBy === 'group') {
       rows = groups.map(group => {
-        // 找到属于该群体的人物
-        const groupPersons = persons.filter(p => p.groupIds?.includes(group.id));
-        const groupPersonIds = groupPersons.map(p => p.id);
+        const groupPersons = persons.filter((p: any) => p.groupIds?.includes(group.id));
+        const groupPersonIds = groupPersons.map((p: any) => p._id ?? p.id);
 
-        // 找到这些人物参与的事件
         const groupEvents: TimelineEvent[] = [];
         filteredEvents.forEach(event => {
-          if (event.personIds?.some((pid: number) => groupPersonIds.includes(pid))) {
+          if (event.personIds?.some((pid: string) => groupPersonIds.includes(pid))) {
             groupEvents.push({
-              eventId: event.id,
+              eventId: event._id ?? event.id ?? 0,
               title: event.title,
               year: String(new Date(event.startDate).getFullYear()),
             });
@@ -61,13 +52,12 @@ export const timelineService = {
         };
       });
     } else {
-      // 按人物分组
-      rows = persons.map(person => {
+      rows = persons.map((person: any) => {
         const personEvents: TimelineEvent[] = [];
         filteredEvents.forEach(event => {
-          if (event.personIds?.includes(person.id)) {
+          if (event.personIds?.includes(person._id ?? person.id)) {
             personEvents.push({
-              eventId: event.id,
+              eventId: event._id ?? event.id ?? 0,
               title: event.title,
               year: String(new Date(event.startDate).getFullYear()),
             });

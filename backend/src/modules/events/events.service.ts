@@ -36,8 +36,16 @@ export class EventsService {
     }
 
     if (groupId) {
-      // 通过人物关联群体（需要在 personIds 关联查询）
-      filter['personIds.groupIds'] = groupId;
+      // 先查询该群体下的人物 ID，再用这些 ID 过滤事件
+      const PersonModel = this.eventModel.db.model('Person');
+      const personsInGroup = await PersonModel.find({ groupIds: groupId }, '_id');
+      const personIds = personsInGroup.map(p => p._id);
+      if (personIds.length > 0) {
+        filter.personIds = { $in: personIds };
+      } else {
+        // 该群体下无人物，直接返回空结果
+        return { data: [], total: 0, page, pageSize, totalPages: 0 };
+      }
     }
 
     if (search) {

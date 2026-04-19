@@ -33,9 +33,12 @@ export function useInfiniteScroll<T>({
     setLoading(true);
     try {
       const result = await fetchFn(page, pageSize);
-      setItems(prev => page === 1 ? result.data : [...prev, ...result.data]);
       setTotal(result.total);
-      setHasMore(result.data.length === pageSize && items.length + result.data.length < result.total);
+      setItems(prev => {
+        const newItems = page === 1 ? result.data : [...prev, ...result.data];
+        setHasMore(result.data.length === pageSize && newItems.length < result.total);
+        return newItems;
+      });
     } catch (e) {
       console.error('Infinite scroll fetch error:', e);
     } finally {

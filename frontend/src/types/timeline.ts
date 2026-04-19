@@ -4,14 +4,14 @@ export interface TimelineMatrix {
 }
 
 export interface TimelineRow {
-  id: number;
+  id: string | number;
   name: string;
   type: 'group' | 'person';
   events: TimelineEvent[];
 }
 
 export interface TimelineEvent {
-  eventId: number;
+  eventId: string | number;
   title: string;
   year: string;
 }

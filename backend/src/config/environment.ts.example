@@ -1,0 +1,12 @@
+// MongoDB 连接配置（示例文件，不包含真实密码）
+// 复制为 environment.ts 后填入真实连接信息
+
+export const MONGODB_CONFIG = {
+  development: 'mongodb://<user>:<password>@<host>:<port>/mch-prc',
+  staging: 'mongodb://<user>:<password>@<host>:<port>/mch-prc',
+  production: 'mongodb://<user>:<password>@<host>:<port>/mch-prc',
+};
+
+export function getMongoUri(env = process.env.NODE_ENV || 'development'): string {
+  return process.env.MONGODB_URI || MONGODB_CONFIG[env as keyof typeof MONGODB_CONFIG] || MONGODB_CONFIG.development;
+}
