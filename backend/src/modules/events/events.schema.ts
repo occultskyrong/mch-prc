@@ -16,20 +16,32 @@ export class SubEvent {
 
 export const SubEventSchema = SchemaFactory.createForClass(SubEvent);
 
+// 带来源标记的详情字段 Schema
+@Schema()
+export class EventDetailField {
+  @Prop({ required: true })
+  content: string;
+
+  @Prop({ type: [Number] })
+  sourceIds: number[];
+}
+
+export const EventDetailFieldSchema = SchemaFactory.createForClass(EventDetailField);
+
 // 事件详情 Schema
 @Schema()
 export class EventDetail {
-  @Prop()
-  motive: string;
+  @Prop({ type: [EventDetailFieldSchema, String] })
+  motive: EventDetailField | string;
 
-  @Prop()
-  process: string;
+  @Prop({ type: [EventDetailFieldSchema, String] })
+  process: EventDetailField | string;
 
-  @Prop()
-  result: string;
+  @Prop({ type: [EventDetailFieldSchema, String] })
+  result: EventDetailField | string;
 
-  @Prop()
-  impact: string;
+  @Prop({ type: [EventDetailFieldSchema, String] })
+  impact: EventDetailField | string;
 }
 
 export const EventDetailSchema = SchemaFactory.createForClass(EventDetail);
@@ -112,8 +124,8 @@ export class Event extends Document {
   @Prop({ type: [SubEventSchema] })
   subEvents: SubEvent[];
 
-  @Prop()
-  source: string;
+  @Prop({ type: [Number] })
+  sourceIds: number[];
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);

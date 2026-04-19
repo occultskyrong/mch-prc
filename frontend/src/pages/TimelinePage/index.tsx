@@ -9,6 +9,7 @@ import { personService } from '../../services/personService';
 import { groupService } from '../../services/groupService';
 import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import { Event } from '../../types/event';
+import { getDetailContent, getDetailSourceTitles } from '../../utils/sourceRegistry';
 
 const { Title } = Typography;
 
@@ -626,10 +627,38 @@ export default function TimelinePage() {
             </Descriptions>
             <Title level={5} style={{ marginTop: 16 }}>详细内容</Title>
             <Descriptions column={1} size="small">
-              {selectedEvent.detail?.motive && <Descriptions.Item label="动机">{selectedEvent.detail.motive}</Descriptions.Item>}
-              {selectedEvent.detail?.process && <Descriptions.Item label="经过">{selectedEvent.detail.process}</Descriptions.Item>}
-              {selectedEvent.detail?.result && <Descriptions.Item label="结果">{selectedEvent.detail.result}</Descriptions.Item>}
-              {selectedEvent.detail?.impact && <Descriptions.Item label="影响">{selectedEvent.detail.impact}</Descriptions.Item>}
+              {getDetailContent(selectedEvent.detail?.motive) && (
+                <Descriptions.Item label="动机">
+                  {getDetailContent(selectedEvent.detail?.motive)}
+                  {getDetailSourceTitles(selectedEvent.detail?.motive).map(s => (
+                    <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
+                  ))}
+                </Descriptions.Item>
+              )}
+              {getDetailContent(selectedEvent.detail?.process) && (
+                <Descriptions.Item label="经过">
+                  {getDetailContent(selectedEvent.detail?.process)}
+                  {getDetailSourceTitles(selectedEvent.detail?.process).map(s => (
+                    <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
+                  ))}
+                </Descriptions.Item>
+              )}
+              {getDetailContent(selectedEvent.detail?.result) && (
+                <Descriptions.Item label="结果">
+                  {getDetailContent(selectedEvent.detail?.result)}
+                  {getDetailSourceTitles(selectedEvent.detail?.result).map(s => (
+                    <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
+                  ))}
+                </Descriptions.Item>
+              )}
+              {getDetailContent(selectedEvent.detail?.impact) && (
+                <Descriptions.Item label="影响">
+                  {getDetailContent(selectedEvent.detail?.impact)}
+                  {getDetailSourceTitles(selectedEvent.detail?.impact).map(s => (
+                    <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
+                  ))}
+                </Descriptions.Item>
+              )}
             </Descriptions>
             <Title level={5} style={{ marginTop: 16 }}>参与人物</Title>
             <div className="person-list">

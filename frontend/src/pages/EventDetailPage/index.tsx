@@ -6,6 +6,7 @@ import { eventService } from '../../services/eventService';
 import { personService } from '../../services/personService';
 import { Event } from '../../types/event';
 import { DIMENSION_LABELS } from '../../utils/impactFactor';
+import { getDetailContent, getDetailSourceTitles } from '../../utils/sourceRegistry';
 
 const { Title } = Typography;
 
@@ -137,13 +138,41 @@ export default function EventDetailPage() {
       </Card>
 
       {/* 详细内容 */}
-      {event.detail && (event.detail.motive || event.detail.process || event.detail.result || event.detail.impact) && (
+      {event.detail && (getDetailContent(event.detail.motive) || getDetailContent(event.detail.process) || getDetailContent(event.detail.result) || getDetailContent(event.detail.impact)) && (
         <Card title="详细内容" style={{ marginBottom: 16 }}>
           <Descriptions column={1} size="small">
-            {event.detail.motive && <Descriptions.Item label="动机">{event.detail.motive}</Descriptions.Item>}
-            {event.detail.process && <Descriptions.Item label="经过">{event.detail.process}</Descriptions.Item>}
-            {event.detail.result && <Descriptions.Item label="结果">{event.detail.result}</Descriptions.Item>}
-            {event.detail.impact && <Descriptions.Item label="影响">{event.detail.impact}</Descriptions.Item>}
+            {getDetailContent(event.detail.motive) && (
+              <Descriptions.Item label="动机">
+                {getDetailContent(event.detail.motive)}
+                {getDetailSourceTitles(event.detail.motive).map(s => (
+                  <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
+                ))}
+              </Descriptions.Item>
+            )}
+            {getDetailContent(event.detail.process) && (
+              <Descriptions.Item label="经过">
+                {getDetailContent(event.detail.process)}
+                {getDetailSourceTitles(event.detail.process).map(s => (
+                  <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
+                ))}
+              </Descriptions.Item>
+            )}
+            {getDetailContent(event.detail.result) && (
+              <Descriptions.Item label="结果">
+                {getDetailContent(event.detail.result)}
+                {getDetailSourceTitles(event.detail.result).map(s => (
+                  <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
+                ))}
+              </Descriptions.Item>
+            )}
+            {getDetailContent(event.detail.impact) && (
+              <Descriptions.Item label="影响">
+                {getDetailContent(event.detail.impact)}
+                {getDetailSourceTitles(event.detail.impact).map(s => (
+                  <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
+                ))}
+              </Descriptions.Item>
+            )}
           </Descriptions>
         </Card>
       )}
