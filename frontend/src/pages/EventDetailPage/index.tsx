@@ -96,8 +96,8 @@ export default function EventDetailPage() {
           <div style={{ textAlign: 'center' }}>
             <Progress
               type="circle"
-              percent={impact.finalScore}
-              format={(p) => `${p}`}
+              percent={Math.round(impact.finalScore / 10)}
+              format={() => `${impact.finalScore}`}
               strokeWidth={8}
               size={100}
               strokeColor={{ '0%': '#1890ff', '100%': '#52c41a' }}

@@ -86,7 +86,7 @@ export class ImpactFactor {
 export const ImpactFactorSchema = SchemaFactory.createForClass(ImpactFactor);
 
 // 主事件 Schema
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'events' })
 export class Event extends Document {
   @Prop({ required: true })
   title: string;

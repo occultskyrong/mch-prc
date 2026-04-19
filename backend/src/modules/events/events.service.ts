@@ -54,7 +54,7 @@ export class EventsService {
 
     const data = await this.eventModel
       .find(filter)
-      .populate('personIds')
+      .populate({ path: 'personIds', model: 'Person' })
       .populate('periodId')
       .skip(skip)
       .limit(pageSize)
@@ -76,7 +76,7 @@ export class EventsService {
   async findOne(id: string) {
     return this.eventModel
       .findById(id)
-      .populate('personIds')
+      .populate({ path: 'personIds', model: 'Person' })
       .populate('periodId')
       .populate('relatedEvents')
       .exec();

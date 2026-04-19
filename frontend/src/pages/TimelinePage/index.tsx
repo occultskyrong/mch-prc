@@ -232,7 +232,8 @@ export default function TimelinePage() {
         const groupPersonIds = groupPersons.map((p: any) => getId(p));
         const yearEvents = matrixEvents.filter(e => {
           const eventYear = new Date(e.startDate).getFullYear();
-          return eventYear === year && e.personIds?.some(pid => groupPersonIds.includes(pid));
+          const eventPersonIds = (e.personIds || []).map((pid: any) => getId(pid));
+          return eventYear === year && eventPersonIds.some(pid => groupPersonIds.includes(pid));
         });
         if (yearEvents.length > 0) rowData[group.id] = yearEvents;
       });
@@ -249,7 +250,7 @@ export default function TimelinePage() {
     const sortedYears = Array.from(yearsWithEvents).sort((a, b) => a - b);
 
     const involvedPersonIds = new Set<string>();
-    matrixEvents.forEach(e => e.personIds?.forEach(pid => involvedPersonIds.add(String(pid))));
+    matrixEvents.forEach(e => (e.personIds || []).forEach((pid: any) => involvedPersonIds.add(getId(pid))));
     const involvedPersons = persons.filter(p => involvedPersonIds.has(getId(p))).slice(0, 30);
 
     sortedYears.forEach(year => {
@@ -258,7 +259,8 @@ export default function TimelinePage() {
       involvedPersons.forEach(person => {
         const yearEvents = matrixEvents.filter(e => {
           const eventYear = new Date(e.startDate).getFullYear();
-          return eventYear === year && e.personIds?.includes(getId(person));
+          const eventPersonIds = (e.personIds || []).map((pid: any) => getId(pid));
+          return eventYear === year && eventPersonIds.includes(getId(person));
         });
         if (yearEvents.length > 0) rowData[getId(person)] = yearEvents;
       });
@@ -380,7 +382,8 @@ export default function TimelinePage() {
     if (viewMode === 'matrix-group') {
       const groupIdsWithEvents = new Set<string>();
       matrixEvents.forEach(e => {
-        const eventPersons = persons.filter(p => e.personIds?.includes(getId(p)));
+        const eventPersonIds = (e.personIds || []).map((pid: any) => getId(pid));
+        const eventPersons = persons.filter(p => eventPersonIds.includes(getId(p)));
         eventPersons.forEach((p: any) => (p.groupIds || []).forEach((gid: any) => groupIdsWithEvents.add(String(gid))));
       });
       cols = groups

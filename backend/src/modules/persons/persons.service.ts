@@ -18,6 +18,9 @@ export class PersonsService {
       filter.groupIds = groupId;
     }
 
+    const total = await this.personModel.countDocuments(filter);
+    console.log(`[PersonsService] findAll: filter=${JSON.stringify(filter)}, total=${total}, page=${page}, pageSize=${pageSize}`);
+
     const data = await this.personModel
       .find(filter)
       .populate('groupIds')
@@ -25,7 +28,7 @@ export class PersonsService {
       .limit(pageSize)
       .exec();
 
-    const total = await this.personModel.countDocuments(filter);
+    console.log(`[PersonsService] returned ${data.length} persons`);
 
     return { data, total, page, pageSize };
   }

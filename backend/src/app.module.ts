@@ -9,9 +9,9 @@ import { SourcesModule } from './modules/sources/sources.module';
 @Module({
   imports: [
     DatabaseModule,
-    EventsModule,
     PersonsModule,
     GroupsModule,
+    EventsModule,
     PeriodsModule,
     SourcesModule,
   ],
