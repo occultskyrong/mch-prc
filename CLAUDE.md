@@ -1,299 +1,108 @@
-# CLAUDE.md - MCH-PRC 中国近代史时间轴项目
+# CLAUDE.md - MCH-PRC 中国近代史时间轴
 
 ## 项目概述
 
-MCH-PRC 是中国近代史时间轴展示项目，包含1839-1949年的历史事件数据。
+MCH-PRC 是中国近代史时间轴系统，覆盖 1839-1949 年历史事件数据。
 
-- **项目类型**: 前端展示 + 历史数据
-- **技术栈**: React + TypeScript + Ant Design + Vite
+- **项目类型**: Monorepo（NestJS 后端 + React 前端）
+- **技术栈**: React + TypeScript + Ant Design + Vite | NestJS + Mongoose + MongoDB
+- **包管理**: npm workspaces
 - **Node版本**: >= 20.11.1
 
 ## 目录结构
 
 ```
 mch-prc/
-├── src/                    # 前端源码
-│   ├── components/         # 组件
-│   ├── pages/              # 页面
-│   │   └── TimelinePage/   # 时间轴页面（主页面）
-│   ├── services/           # API服务
-│   ├── types/              # 类型定义
-│   └── routes/             # 路由配置
-├── public/data/            # 生成的JSON数据
-│   ├── events.json         # 事件数据
-│   └── persons.json        # 人物数据
-├── raw/                    # 原始Markdown数据
-│   ├── 01_鸦片战争时期_1839-1860/
-│   ├── 02_洋务运动时期_1861-1894/
-│   ├── 03_甲午战后时期_1895-1900/
-│   ├── 04_清末新政时期_1901-1911/
-│   ├── 05_民国初期_1912-1927/
-│   └── 06_国民政府时期_1927-1949/
-├── scripts/                # 转换脚本
-│   └── convert-raw-data-clean.cjs
-├── index.html              # HTML入口
-└── package.json
+├── backend/                      # NestJS 后端
+│   ├── src/
+│   │   ├── modules/
+│   │   │   ├── events/           # 事件 CRUD + 影响力因子计算
+│   │   │   ├── persons/          # 人物数据
+│   │   │   ├── groups/           # 群体数据
+│   │   │   ├── periods/          # 历史时期
+│   │   │   └── sources/          # 史料来源
+│   │   ├── common/
+│   │   │   └── impact-factor/    # 影响力因子计算器
+│   │   ├── env-bootstrap.ts      # 环境变量加载（必须在 main.ts 首行 import）
+│   │   └── main.ts
+│   └── scripts/                  # 数据导入/迁移脚本
+│
+├── frontend/                     # React 前端
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── TimelinePage/     # 时间轴主页（矩阵/列表视图）
+│   │   │   └── EventDetailPage/  # 事件详情页（影响力分析）
+│   │   ├── services/             # API 请求服务
+│   │   ├── types/                # TypeScript 类型
+│   │   ├── hooks/
+│   │   │   └── useInfiniteScroll # 无限滚动 Hook
+│   │   └── utils/
+│   │       ├── impactFactor.ts   # 前端影响力因子工具
+│   │       └── sourceRegistry.ts # 来源注册表工具
+│   └── vite.config.ts            # 含 /api proxy 到后端
+│
+├── raw/                          # 原始 Markdown 年表数据
+└── docs/                         # 项目文档
 ```
 
 ## 开发命令
 
 ```bash
-# 开发环境启动
+# 开发环境（同时启动前后端）
 npm run dev
+
+# 仅后端
+npm run dev:backend        # NestJS 热重载
+npm run dev:frontend       # Vite 开发服务器
 
 # 构建
 npm run build
 
-# 预览构建结果
-npm run preview
-
-# 数据转换
-node scripts/convert-raw-data-clean.cjs
+# 数据导入（后端）
+cd backend && node scripts/apply-book-enrichment.cjs
+cd backend && node scripts/apply-causal-chain.cjs
 ```
 
-## 数据流程
+## API 代理
 
-```
-raw/*.md → scripts/convert-raw-data-clean.cjs → public/data/events.json
-```
+前端 Vite 配置将 `/api` 代理到 `http://localhost:3000`，开发时前后端共用端口访问。
 
-## 历史时期划分
+## 编码规范
 
-### 按文件夹划分（6个时期）
+### 命名规范
 
-| 时期 | 年份范围 | 年份文件 |
-|------|----------|----------|
-| 鸦片战争时期 | 1839-1860 | 22 |
-| 洋务运动时期 | 1861-1894 | 34 |
-| 甲午战后时期 | 1895-1900 | 6 |
-| 清末新政时期 | 1901-1911 | 11 |
-| 民国初期 | 1912-1927 | 16 |
-| 国民政府时期 | 1927-1949 | 22 |
+- **Service 注入缩写**: `irp` = repository, `cs` = child service
+- **私有方法**: `__` 前缀
+- **文件名**: snake_case
 
-### 太平天国时期（1851-1864）
+### 数据库
 
-与鸦片战争后期、洋务运动前期重叠，不单独创建文件夹：
-- 1851-1860：鸦片战争时期后期，金田起义、定都天京、北伐西征
-- 1861-1864：洋务运动时期前期，天京事变、天京陷落
+- MongoDB 集合名与模型名一致时，Schema 需显式声明 `collection: 'xxx'`
+- 跨模块 populate 需要在模块间显式 import 对应的 Module
 
-## 年份文件格式
+### 环境变量
 
-年份文件采用 Markdown 格式：
+`.env` 必须在 `main.ts` 首行通过 `env-bootstrap.ts` 加载，确保 NestJS 模块初始化前环境变量已就绪。
 
-```markdown
-### X. 事件名称
+## 影响力因子算法
 
-**时间**: YYYY年M月D日
-**地点**: 地点
-**参与人物**: 人物列表
-**来源**: 来源
-**事件概述**: 概述
-**详细内容**:
-**动机原因**: 原因
-**经过描述**: 过程
-**结果**: 结果
-**影响**: 影响
+每个事件通过 `ImpactFactorCalculator` 计算多维度评分：
+- 政治变革、经济影响、军事规模、社会结构
+- 思想文化、国际关系、领土主权、制度遗产、历史转折
+- 范围加成（全国/国际）、持续加成（跨年度）
+- 最终分数 0-1000
 
-**子事件**:
+## 史料来源
 
-#### X.X 子事件名称
-**时间**: YYYY年M月D日
-**内容**: 内容描述
-```
-
-- 主事件使用 `### X.` 标题
-- 子事件使用 `#### X.X` 标题
-
-## 前端页面结构
-
-### TimelinePage 时间轴页面
-
-- **顶部时期选择器**: 6个历史时期快捷选择
-- **年份筛选**: 起始/结束年份下拉
-- **事件类型筛选**: 战争、条约、起义、改革、事件
-- **群体筛选**: 洋务派、清廷、太平天国等
-- **视图模式**:
-  - 时间×群体（矩阵视图）
-  - 时间×人物（矩阵视图）
-  - 按群体（列表视图）
-  - 按人物（列表视图）
-
-### 时期展示
-
-- **时期列**: 左侧固定，显示时期名称和年份跨度（合并单元格）
-- **年份列**: 第二列显示具体年份
-- **事件标题**: CSS截断（`text-overflow: ellipsis`）
-
-## 数据类型
-
-### Event 事件类型
+来源独立注册在 `sources.json`，事件通过 `sourceIds` 引用：
 
 ```typescript
-interface Event {
-  id: number;
-  title: string;
-  startDate: string;
-  endDate?: string;
-  isInstant: boolean;
-  eventType: string;  // 战争、条约、起义、改革、事件
-  location?: string;
-  summary: string;
-  detail?: {
-    motive?: string;
-    process?: string;
-    result?: string;
-    impact?: string;
-  };
-  subEvents?: SubEvent[];
-  personIds?: number[];
-}
-```
-
-### SubEvent 子事件类型
-
-```typescript
-interface SubEvent {
-  id: number;
-  title: string;
-  time: string;
+interface EventDetailField {
   content: string;
+  sourceIds: string[];
 }
 ```
 
-## 事件类型颜色映射
+## 关联项目
 
-```typescript
-const EVENT_TYPE_COLORS = {
-  '战争': '#f5222d',
-  '条约': '#1890ff',
-  '起义': '#fa8c16',
-  '改革': '#52c41a',
-  '事件': '#722ed1',
-};
-```
-
-## 时期颜色映射
-
-```typescript
-const HISTORICAL_PERIODS = [
-  { name: '鸦片战争时期', color: '#f5222d' },
-  { name: '洋务运动时期', color: '#1890ff' },
-  { name: '甲午战后时期', color: '#fa8c16' },
-  { name: '清末新政时期', color: '#52c41a' },
-  { name: '民国初期', color: '#722ed1' },
-  { name: '国民政府时期', color: '#eb2f96' },
-];
-```
-
-## 数据目标
-
-- 每年约10个事件（含子事件）
-- 子事件用于展示同一历史进程的不同阶段
-- 示例：1840年鸦片战争爆发（8个子事件）
-
-## 数据来源
-
-- 维基百科
-- 百度百科
-- 《中国近代史》蒋廷黻
-
-## 群体分类
-
-项目定义了以下群体分类，用于人物归属判断：
-
-```javascript
-const GROUPS = {
-  洋务派: 1,    // 洋务、曾国藩、李鸿章、左宗棠、张之洞
-  清廷: 2,      // 皇帝、太后、总督、巡抚、尚书、大臣、林则徐
-  太平天国: 3,  // 太平天国、太平军、洪秀全、杨秀清、石达开、李秀成
-  湘淮系: 4,    // 湘军、淮军
-  维新派: 5,    // 维新、康有为、梁启超、谭嗣同、戊戌
-  革命派: 6,    // 革命、孙中山、黄兴
-  中国共产党: 7,// 共产党、毛泽东、周恩来
-  英军: 8,      // 英国、英军、义律、巴麦尊、璞鼎查、联军
-};
-```
-
-## 事件类型判断规则
-
-```javascript
-function getEventType(title) {
-  if (title.includes('条约')) return '条约';
-  if (title.includes('战争') || title.includes('战')) return '战争';
-  if (title.includes('起义') || title.includes('运动')) return '起义';
-  if (title.includes('变法') || title.includes('改革')) return '改革';
-  return '事件';
-}
-```
-
-## 转换脚本说明
-
-### convert-raw-data-clean.cjs
-
-功能：
-1. 遍历raw目录下所有年份文件（YYYY.md格式）
-2. 解析主事件（### X.）和子事件（#### X.X）
-3. 提取时间、地点、人物、概述、详细内容
-4. 自动推断事件类型和人物群体
-5. 生成events.json和persons.json
-
-关键解析逻辑：
-- 主事件分割：`\n### \d+\.`
-- 子事件分割：`\n#### \d+\.\d+`
-- 日期解析：`\d{4}年(\d{1,2})月(\d{1,2})日?`
-
-## 数据采集要求
-
-### 目标数量
-- 每年约10个事件（含子事件）
-- 子事件用于展示同一历史进程的不同阶段
-
-### 各时期重点事件
-
-**鸦片战争时期（1839-1860）**
-- 林则徐禁烟、虎门销烟
-- 鸦片战争各战役：定海之战、虎门之战、广州战役、吴淞之战、镇江之战
-- 南京条约签订
-- 太平天国：金田起义、永安建制、定都天京、北伐西征、天京事变
-- 第二次鸦片战争：亚罗号事件、大沽口之战、天津条约、火烧圆明园、北京条约
-
-**洋务运动时期（1861-1894）**
-- 总理衙门设立
-- 洋务企业创办：安庆内军械所、江南制造总局、福州船政局、轮船招商局
-- 教育改革：同文馆、幼童留美
-- 中法战争：马尾海战、镇南关之战
-- 甲午战争：丰岛海战、平壤之战、黄海海战
-
-**甲午战后时期（1895-1900）**
-- 马关条约、威海卫之战、台湾抗日
-- 列强瓜分：胶州湾租借、旅顺大连租借
-- 戊戌变法：定国是诏、百日维新、戊戌政变
-- 义和团运动、八国联军、辛丑条约
-
-**清末新政时期（1901-1911）**
-- 清末新政各措施
-- 废除科举、五大臣出洋、预备立宪
-- 铁路风潮、保路运动
-- 辛亥革命：武昌起义、各省独立
-
-**民国初期（1912-1927）**
-- 清帝退位、民国成立
-- 宋教仁案、二次革命、护国运动、护法运动
-- 五四运动、中共成立
-- 北伐战争
-
-**国民政府时期（1927-1949）**
-- 中原大战、九一八事变
-- 长征：五次反围剿、遵义会议、四渡赤水
-- 西安事变
-- 抗日战争：淞沪会战、太原会战、台儿庄战役、武汉会战、百团大战
-- 解放战争：辽沈战役、淮海战役、平津战役、渡江战役
-
-### 数据来源优先级
-1. 维基百科（最权威）
-2. 百度百科（补充中文视角）
-3. 《中国近代史》蒋廷黻（学术著作）
-
-## 当前进度
-
-详见 [PROGRESS.md](PROGRESS.md)
+- **ai-foundation**: AI 基座服务，PTS Server 通过 `/admin/ai/*` 代理

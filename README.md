@@ -2,58 +2,76 @@
 
 中国近代史编年体纪要系统，以中华人民共和国视角梳理 1839-1949 年历史事件。
 
+**当前版本**: v1.3.0
+
 ## 功能特点
 
 - **时间轴矩阵可视化**: 横轴时间、纵轴群体/人物，两轴可互换
-- **历史时期划分**: 鸦片战争时期、洋务运动时期、甲午战后时期、清末新政时期、民国初期、国民政府时期
-- **史料来源标注**: 所有史料明确标注出处，优先官方认可史料
-- **事件双层内容**: 摘要层（简要概述）+ 细节层（动机、经过、结果、影响）
-- **影响因子评估**: 每个事件量化影响因子分数，支持历史重要性排序
-- **关联关系追踪**: 事件之间的因果关联、人物参与角色
-- **移动端兼容**: 响应式设计，头部可折叠，适配手机浏览
+- **历史时期划分**: 六大时期，支持快捷切换
+- **史料来源标注**: 所有史料明确标注出处，支持按来源聚合统计
+- **事件双层内容**: 摘要层 + 细节层（动机、经过、结果、影响）
+- **影响因子评估**: 多维度量化评分（0-1000），支持历史重要性排序
+- **关联关系追踪**: 事件因果关联、人物参与角色
+- **移动端兼容**: 响应式设计，头部可折叠
+
+## v1.3.0 更新
+
+### 性能优化
+- **矩阵视图动态加载**: 不再一次性加载全部事件，按 15 年分批滚动加载
+- **无限滚动**: 基于 IntersectionObserver 自动触发下一批数据加载
+
+### UI 改进
+- **表头固定**: 矩阵表格表头滚动时固定，方便查看列头
+- **筛选栏可收起**: Web 端支持收起筛选栏（时期选择、搜索栏、图例全部收起为摘要条）
+- **筛选栏整合**: 时期选择、搜索控件、标记图例统一整合在筛选栏内，支持一起收起
+
+### 数据迁移
+- **后端 API 驱动**: 从静态 JSON 迁移到 MongoDB + NestJS API
+- **来源独立注册**: 史料来源抽象为独立注册表，事件通过 ID 引用
 
 ## 技术栈
 
-纯静态前端架构：
+### 前端
 - React 18 + TypeScript + Ant Design 5 + Vite 5
-- 数据存储为 JSON 文件，无需后端服务
-- 构建产物可部署到任何静态服务器
+- 无限滚动 Hook + IntersectionObserver
+
+### 后端
+- NestJS + Mongoose + MongoDB
+- npm workspaces monorepo
+
+### 数据存储
+- MongoDB 存储事件、人物、群体、史料来源数据
+- 开发时通过 Vite proxy 代理 `/api` 到后端服务
 
 ## 项目结构
 
 ```
 mch-prc/
-├── src/
-│   ├── pages/
-│   │   └── TimelinePage/       # 时间轴矩阵页（主页面）
-│   ├── services/               # 数据读取服务
-│   ├── types/                  # TypeScript 类型定义
-│   └── components/             # 公共组件
+├── backend/
+│   ├── src/modules/
+│   │   ├── events/           # 事件 CRUD + 影响力因子计算
+│   │   ├── persons/          # 人物数据
+│   │   ├── groups/           # 群体数据
+│   │   ├── periods/          # 历史时期
+│   │   └── sources/          # 史料来源
+│   ├── src/common/
+│   │   └── impact-factor/    # 影响力因子计算器
+│   └── scripts/              # 数据导入/迁移脚本
 │
-├── public/data/                # JSON 数据文件
-│   ├── events.json             # 历史事件数据（1075条）
-│   ├── persons.json            # 人物数据（478人）
-│   └── groups.json             # 群体数据
+├── frontend/
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── TimelinePage/       # 时间轴主页
+│   │   │   └── EventDetailPage/    # 事件详情页（影响力分析）
+│   │   ├── services/               # API 服务
+│   │   ├── hooks/
+│   │   │   └── useInfiniteScroll   # 无限滚动 Hook
+│   │   └── utils/
+│   │       ├── impactFactor.ts     # 影响力因子工具
+│   │       └── sourceRegistry.ts   # 来源注册表工具
 │
-├── raw/                        # 原始Markdown数据源（按时期分目录）
-│   ├── 01_鸦片战争时期_1839-1860/
-│   ├── 02_洋务运动时期_1861-1894/
-│   ├── 03_甲午战后时期_1895-1900/
-│   ├── 04_清末新政时期_1901-1911/
-│   ├── 05_民国初期_1912-1926/
-│   └── 06_国民政府时期_1927-1949/
-│
-├── scripts/                    # 数据转换脚本
-│   └── convert-raw-data-clean.cjs
-│
-├── docs/                       # 文档
-│   └── FEATURES.md             # 功能规划
-│
-├── deploy.sh                   # 服务端部署脚本
-├── dist/                       # 构建输出（gitignore）
-├── package.json
-├── vite.config.ts
-└── index.html
+├── raw/                    # 原始 Markdown 年表数据
+└── docs/                   # 项目文档
 ```
 
 ## 快速开始
@@ -64,13 +82,20 @@ mch-prc/
 npm install
 ```
 
+### 配置环境变量
+
+```bash
+cp .env.example .env
+# 编辑 .env 填入 MongoDB 连接串
+```
+
 ### 启动开发服务器
 
 ```bash
 npm run dev
 ```
 
-访问 http://localhost:5173
+前端访问 http://localhost:5173，API 代理到后端 http://localhost:3000
 
 ### 构建生产版本
 
@@ -82,10 +107,9 @@ npm run build
 
 | 类别 | 数量 | 说明 |
 |------|------|------|
-| 历史事件 | 1075 | 1839-1949年重大历史事件 |
+| 历史事件 | 1000+ | 1839-1949年重大历史事件 |
 | 人物 | 478 | 参与事件的关键人物 |
 | 群体 | 13 | 洋务派、清廷、太平天国、革命派等 |
-| 子事件 | 93 | 主事件包含的详细子事件 |
 
 ## 历史时期划分
 
@@ -95,76 +119,86 @@ npm run build
 | 洋务运动时期 | 1861-1894 | 洋务运动、中法战争、甲午战争 |
 | 甲午战后时期 | 1895-1900 | 戊戌变法、义和团运动、八国联军 |
 | 清末新政时期 | 1901-1911 | 清末新政、废除科举、辛亥革命 |
-| 民国初期 | 1912-1926 | 民国成立、五四运动、北伐战争、南昌起义 |
+| 民国初期 | 1912-1926 | 民国成立、五四运动、北伐战争 |
 | 国民政府时期 | 1927-1949 | 抗日战争、解放战争、新中国成立 |
 
 ## 数据模型
 
 ### 事件 (Event)
-```json
-{
-  "id": 1,
-  "title": "鸦片战争",
-  "startDate": "1840-06-01",
-  "endDate": "1842-08-01",
-  "eventType": "战争",
-  "summary": "简要概述...",
-  "detail": {
-    "motive": "动机原因",
-    "process": "经过描述",
-    "result": "结果",
-    "impact": "影响"
-  },
-  "personIds": [1, 2, 3],
-  "relatedEvents": [2]
+```typescript
+interface Event {
+  _id: string;
+  title: string;
+  startDate: Date;
+  endDate?: Date;
+  eventType: string;
+  location?: string;
+  summary: string;
+  detail?: {
+    motive?: EventDetailField;
+    process?: EventDetailField;
+    result?: EventDetailField;
+    impact?: EventDetailField;
+  };
+  personIds?: string[];
+  relatedEvents?: string[];
+  impactFactor?: ImpactFactor;
+  sourceIds?: string[];
+}
+```
+
+### 事件详情字段
+```typescript
+interface EventDetailField {
+  content: string;
+  sourceIds: string[];
 }
 ```
 
 ### 人物 (Person)
-```json
-{
-  "id": 1,
-  "name": "林则徐",
-  "birthYear": 1785,
-  "deathYear": 1850,
-  "gender": "男",
-  "bioSummary": "生平简介",
-  "groupIds": [1]
+```typescript
+interface Person {
+  _id: string;
+  name: string;
+  birthYear?: number;
+  deathYear?: number;
+  gender?: string;
+  bioSummary?: string;
+  groupIds?: string[];
 }
 ```
 
 ### 群体 (Group)
-
-```json
-{
-  "id": 1,
-  "name": "洋务派",
-  "parentId": null,
-  "type": "学派",
-  "description": "群体描述"
+```typescript
+interface Group {
+  _id: string;
+  name: string;
+  parentId?: string;
+  type?: string;
+  description?: string;
 }
 ```
 
-## 功能规划
+## 部署
 
-详见 [docs/FEATURES.md](docs/FEATURES.md)，包含：
-
-- **Feature 1**: 事件影响因子量化评分系统（多维度评分模型）
-- **Feature 2**: 基于RAG的事件关联发现（向量检索+LLM分析）
-- **Feature 3**: 历史事件关系图谱可视化（D3.js/G6图可视化）
+### 服务端部署
+```bash
+./deploy.sh /var/www/mch-prc
+```
 
 ## 版本日志
 
-详见 [docs/CHANGELOG.md](docs/CHANGELOG.md)
+### v1.3.0 (2026-04-19)
+- 矩阵视图动态加载（按 15 年分批滚动加载）
+- 表头固定（Ant Design scroll.y）
+- 筛选栏可收起（Web 端）
+- 筛选栏整合（时期选择、搜索、图例统一）
+- 后端 MongoDB 数据驱动（替代静态 JSON）
+- 史料来源独立注册表
 
-**当前版本**: v1.2.0
-
-## 部署
-
-```bash
-# 服务端部署
-./deploy.sh /var/www/mch-prc
-```
+### v1.2.0
+- 事件影响因子量化评分系统
+- 史料来源标注
 
 ## License
 

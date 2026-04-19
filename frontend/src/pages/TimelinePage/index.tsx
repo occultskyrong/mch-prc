@@ -58,6 +58,7 @@ export default function TimelinePage() {
 
   const [headerExpanded, setHeaderExpanded] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [filterCollapsed, setFilterCollapsed] = useState(false);
 
   const [searchText, setSearchText] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
@@ -134,30 +135,83 @@ export default function TimelinePage() {
     return params;
   }, [startYear, endYear, searchText, eventTypeFilter, groupFilter]);
 
-  // 矩阵视图：加载全部事件
+  // 矩阵视图：按年份范围分批加载
   const [matrixEvents, setMatrixEvents] = useState<Event[]>([]);
   const [matrixLoading, setMatrixLoading] = useState(false);
+  const [loadedYearRange, setLoadedYearRange] = useState<[number, number] | null>(null);
+  const matrixTableRef = useRef<HTMLDivElement>(null);
+  const matrixLoadingRef = useRef(false);
+  const MATRIX_YEARS_PER_BATCH = 15;
 
-  useEffect(() => {
-    if (viewMode !== 'matrix-group' && viewMode !== 'matrix-person') return;
-    loadMatrixEvents();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, startYear, endYear, searchText, eventTypeFilter, groupFilter]);
+  // 计算当前已加载到的年份
+  const nextBatchStartYear = useMemo(() => {
+    if (!loadedYearRange) return startYear;
+    return Math.min(loadedYearRange[1] + 1, endYear);
+  }, [loadedYearRange, startYear, endYear]);
 
-  const loadMatrixEvents = async () => {
+  const hasMoreMatrix = useMemo(() => {
+    if (!loadedYearRange) return true;
+    return loadedYearRange[1] < endYear;
+  }, [loadedYearRange, endYear]);
+
+  const loadMatrixBatch = useCallback(async (fromYear: number, replace = false) => {
+    if (matrixLoadingRef.current) return;
+    matrixLoadingRef.current = true;
     setMatrixLoading(true);
+    const toYear = Math.min(fromYear + MATRIX_YEARS_PER_BATCH - 1, endYear);
     try {
       const result = await eventService.list({
         ...buildQueryParams(),
+        startYear: fromYear,
+        endYear: toYear,
         page: 1,
         pageSize: 10000,
       });
-      setMatrixEvents(result.data);
+      setMatrixEvents(prev => {
+        if (replace) return result.data;
+        const existingIds = new Set(prev.map(e => getId(e)));
+        const newEvents = result.data.filter(e => !existingIds.has(getId(e)));
+        return [...prev, ...newEvents];
+      });
+      setLoadedYearRange([fromYear, toYear]);
     } catch (e) {
       console.error(e);
     }
+    matrixLoadingRef.current = false;
     setMatrixLoading(false);
-  };
+  }, [buildQueryParams, endYear]);
+
+  // 参数变化时重置并加载第一批
+  useEffect(() => {
+    if (viewMode !== 'matrix-group' && viewMode !== 'matrix-person') return;
+    setMatrixEvents([]);
+    setLoadedYearRange(null);
+    matrixLoadingRef.current = false;
+    loadMatrixBatch(startYear, true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, startYear, endYear, searchText, eventTypeFilter, groupFilter]);
+
+  // 矩阵表格滚动监听 — 接近底部时加载下一批
+  useEffect(() => {
+    if (viewMode !== 'matrix-group' && viewMode !== 'matrix-person') return;
+    if (!hasMoreMatrix) return;
+
+    const container = matrixTableRef.current;
+    if (!container) return;
+    const scrollBody = container.querySelector('.ant-table-body');
+    if (!scrollBody) return;
+
+    const onScroll = () => {
+      if (matrixLoadingRef.current) return;
+      const threshold = 300;
+      if (scrollBody.scrollHeight - scrollBody.scrollTop - scrollBody.clientHeight < threshold) {
+        loadMatrixBatch(nextBatchStartYear);
+      }
+    };
+
+    scrollBody.addEventListener('scroll', onScroll);
+    return () => scrollBody.removeEventListener('scroll', onScroll);
+  }, [viewMode, hasMoreMatrix, nextBatchStartYear, loadMatrixBatch]);
 
   // 列表视图：使用无限滚动
   const {
@@ -479,88 +533,115 @@ export default function TimelinePage() {
       )}
 
       {(!isMobile || headerExpanded) && (
-        <div className="period-overview">
-          {HISTORICAL_PERIODS.map(period => (
-            <Tooltip key={period.key} title={`${period.years}: ${period.description}`}>
-              <div className={`period-chip ${selectedPeriod === period.key ? 'selected' : ''}`}
-                style={{ backgroundColor: selectedPeriod === period.key ? period.color : `${period.color}20`, borderColor: period.color }}
-                onClick={() => setSelectedPeriod(selectedPeriod === period.key ? null : period.key)}>
-                <div className="period-color-bar" style={{ backgroundColor: period.color }} />
-                <span className="period-name" style={{ color: selectedPeriod === period.key ? '#fff' : period.color }}>{period.name}</span>
-                <span className="period-years">{period.years}</span>
+        <>
+          {(!isMobile && filterCollapsed) ? (
+            <div className="filter-collapsed-bar">
+              <span className="filter-summary">
+                {searchText && `搜索: "${searchText}"`}
+                {searchText && startYear !== 1839 && ' · '}
+                {startYear !== 1839 || endYear !== 1949 ? `${startYear}-${endYear}` : '1839-1949'}
+                {selectedPeriod && ` · ${HISTORICAL_PERIODS.find(p => p.key === selectedPeriod)?.name}`}
+                {eventTypeFilter.length > 0 && ` · ${eventTypeFilter.join('、')}`}
+                {groupFilter.length > 0 && ` · ${groupFilter.map(gid => groups.find(g => String(g.id) === String(gid))?.name).join('、')}`}
+              </span>
+              <Button type="text" size="small" icon={<MenuOutlined />}
+                onClick={() => setFilterCollapsed(false)} title="展开筛选" />
+            </div>
+          ) : (
+            <div className="filter-bar">
+              <div className="period-chips">
+                {HISTORICAL_PERIODS.map(period => (
+                  <Tooltip key={period.key} title={`${period.years}: ${period.description}`}>
+                    <div className={`period-chip ${selectedPeriod === period.key ? 'selected' : ''}`}
+                      style={{ backgroundColor: selectedPeriod === period.key ? period.color : `${period.color}20`, borderColor: period.color }}
+                      onClick={() => setSelectedPeriod(selectedPeriod === period.key ? null : period.key)}>
+                      <div className="period-color-bar" style={{ backgroundColor: period.color }} />
+                      <span className="period-name" style={{ color: selectedPeriod === period.key ? '#fff' : period.color }}>{period.name}</span>
+                      <span className="period-years">{period.years}</span>
+                    </div>
+                  </Tooltip>
+                ))}
               </div>
-            </Tooltip>
-          ))}
-        </div>
-      )}
-
-      {(!isMobile || headerExpanded) && (
-        <div className="filter-bar">
-          <div className="filter-left">
-            <Input placeholder="搜索事件..." prefix={<SearchOutlined />}
-              value={searchText} onChange={e => setSearchText(e.target.value)}
-              style={{ width: 200 }} allowClear />
-            <Select placeholder="起始年份" value={startYear}
-              onChange={(v) => { setStartYear(v); setSelectedPeriod(null); }}
-              options={yearOptions} style={{ width: 100 }} />
-            <Select placeholder="结束年份" value={endYear}
-              onChange={(v) => { setEndYear(v); setSelectedPeriod(null); }}
-              options={yearOptions} style={{ width: 100 }} />
-            <Select mode="multiple" placeholder="事件类型"
-              value={eventTypeFilter} onChange={setEventTypeFilter}
-              options={eventTypeOptions} style={{ width: 150 }} allowClear maxTagCount={2} />
-            <Select mode="multiple" placeholder="群体"
-              value={groupFilter} onChange={setGroupFilter}
-              options={groupOptions} style={{ width: 150 }} allowClear maxTagCount={2} />
-          </div>
-          <div className="filter-right">
-            <Space>
-              <Button type={viewMode === 'matrix-group' ? 'primary' : 'default'}
-                icon={<CalendarOutlined />} onClick={() => setViewMode('matrix-group')}>时间×群体</Button>
-              <Button type={viewMode === 'matrix-person' ? 'primary' : 'default'}
-                icon={<UserOutlined />} onClick={() => setViewMode('matrix-person')}>时间×人物</Button>
-              <Button type={viewMode === 'group' ? 'primary' : 'default'}
-                icon={<TeamOutlined />} onClick={() => setViewMode('group')}>按群体</Button>
-              <Button type={viewMode === 'person' ? 'primary' : 'default'}
-                icon={<UserOutlined />} onClick={() => setViewMode('person')}>按人物</Button>
-            </Space>
-          </div>
-          <div className="filter-count">
-            {(viewMode === 'matrix-group' || viewMode === 'matrix-person')
-              ? `共 ${matrixEvents.length} 个事件`
-              : `已加载 ${listEvents.length} / ${listTotal} 个事件`}
-          </div>
-        </div>
-      )}
-
-      {(!isMobile || headerExpanded) && (
-        <div className="color-legend">
-          <div className="legend-section">
-            <span className="legend-title">事件类型:</span>
-            {Object.entries(EVENT_TYPE_COLORS).map(([type, color]) => (
-              <Tag key={type} color={color} style={{ fontSize: 11, margin: '2px' }}>{type}</Tag>
-            ))}
-          </div>
-          <div className="legend-section">
-            <span className="legend-title">群体:</span>
-            {Object.entries(GROUP_COLORS).slice(0, 8).map(([name, color]) => (
-              <Tag key={name} color={color} style={{ fontSize: 11, margin: '2px' }}>{name}</Tag>
-            ))}
-          </div>
-        </div>
+              <div className="filter-row">
+                <div className="filter-left">
+                  <Input placeholder="搜索事件..." prefix={<SearchOutlined />}
+                    value={searchText} onChange={e => setSearchText(e.target.value)}
+                    style={{ width: 200 }} allowClear />
+                  <Select placeholder="起始年份" value={startYear}
+                    onChange={(v) => { setStartYear(v); setSelectedPeriod(null); }}
+                    options={yearOptions} style={{ width: 100 }} />
+                  <Select placeholder="结束年份" value={endYear}
+                    onChange={(v) => { setEndYear(v); setSelectedPeriod(null); }}
+                    options={yearOptions} style={{ width: 100 }} />
+                  <Select mode="multiple" placeholder="事件类型"
+                    value={eventTypeFilter} onChange={setEventTypeFilter}
+                    options={eventTypeOptions} style={{ width: 150 }} allowClear maxTagCount={2} />
+                  <Select mode="multiple" placeholder="群体"
+                    value={groupFilter} onChange={setGroupFilter}
+                    options={groupOptions} style={{ width: 150 }} allowClear maxTagCount={2} />
+                </div>
+                <div className="filter-right">
+                  <Space>
+                    <Button type={viewMode === 'matrix-group' ? 'primary' : 'default'}
+                      icon={<CalendarOutlined />} onClick={() => setViewMode('matrix-group')}>时间×群体</Button>
+                    <Button type={viewMode === 'matrix-person' ? 'primary' : 'default'}
+                      icon={<UserOutlined />} onClick={() => setViewMode('matrix-person')}>时间×人物</Button>
+                    <Button type={viewMode === 'group' ? 'primary' : 'default'}
+                      icon={<TeamOutlined />} onClick={() => setViewMode('group')}>按群体</Button>
+                    <Button type={viewMode === 'person' ? 'primary' : 'default'}
+                      icon={<UserOutlined />} onClick={() => setViewMode('person')}>按人物</Button>
+                    {!isMobile && (
+                      <Button type="text" size="small"
+                        icon={<CloseOutlined />}
+                        onClick={() => setFilterCollapsed(true)}
+                        title="收起筛选" />
+                    )}
+                  </Space>
+                </div>
+                <div className="filter-count">
+                  {(viewMode === 'matrix-group' || viewMode === 'matrix-person')
+                    ? `共 ${matrixEvents.length} 个事件`
+                    : `已加载 ${listEvents.length} / ${listTotal} 个事件`}
+                </div>
+              </div>
+              <div className="color-legend">
+                <div className="legend-section">
+                  <span className="legend-title">事件类型:</span>
+                  {Object.entries(EVENT_TYPE_COLORS).map(([type, color]) => (
+                    <Tag key={type} color={color} style={{ fontSize: 11, margin: '2px' }}>{type}</Tag>
+                  ))}
+                </div>
+                <div className="legend-section">
+                  <span className="legend-title">群体:</span>
+                  {Object.entries(GROUP_COLORS).slice(0, 8).map(([name, color]) => (
+                    <Tag key={name} color={color} style={{ fontSize: 11, margin: '2px' }}>{name}</Tag>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <div className="timeline-content" ref={scrollContainerRef} onScroll={handleScroll}>
         {loadingMeta ? (
           <div className="loading-center"><Spin tip="加载中..." /></div>
         ) : (viewMode === 'matrix-group' || viewMode === 'matrix-person') ? (
-          matrixLoading ? (
+          matrixEvents.length === 0 && matrixLoading ? (
             <div className="loading-center"><Spin tip="加载事件中..." /></div>
           ) : matrixDataSource.length === 0 ? (
             <Empty description="没有找到匹配的事件" />
           ) : (
-            <Table columns={matrixColumns} dataSource={matrixDataSource}
-              scroll={{ x: 'max-content', y: 'calc(100vh - 140px)' }} bordered size="small" pagination={false} />
+            <div className="matrix-table-wrapper" ref={matrixTableRef}>
+              <Table columns={matrixColumns} dataSource={matrixDataSource}
+                scroll={{ x: 'max-content', y: 'calc(100vh - 200px)' }} bordered size="small" pagination={false} />
+              {matrixLoading && matrixEvents.length > 0 && (
+                <div className="loading-indicator"><Spin tip="加载更多..." /></div>
+              )}
+              {!hasMoreMatrix && (
+                <div className="no-more">— 已加载全部 {matrixEvents.length} 个事件 —</div>
+              )}
+            </div>
           )
         ) : (viewMode === 'group' || viewMode === 'person') ? (
           <>
