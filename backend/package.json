@@ -6,8 +6,7 @@
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "start:prod": "node dist/main",
-    "migrate": "ts-node scripts/migrate-to-mongo.ts"
+    "start:prod": "node dist/main"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
