@@ -3,10 +3,14 @@
  * 导入顺序：Groups → Persons → Events（依赖递增）
  *
  * 使用方法:
- * cd backend && MONGODB_URI='你的连接串' npx ts-node scripts/import-all-data.ts
+ * cd backend && MONGODB_URI='你的连接串' npx ts-node scripts/import-data.ts
  *
  * 或者不传 MONGODB_URI，脚本会尝试从 environment.local.ts 读取
  */
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
@@ -16,24 +20,7 @@ const DATA_DIR = path.join(__dirname, '../../frontend/public/data');
 // 尝试获取 MongoDB URI
 function getMongoUri(): string {
   if (process.env.MONGODB_URI) return process.env.MONGODB_URI;
-
-  try {
-    const envLocalPath = path.join(__dirname, '../src/config/environment.local.ts');
-    const content = fs.readFileSync(envLocalPath, 'utf8');
-    const match = content.match(/development:\s*['"]([^'"]+)['"]/);
-    if (match) {
-      let uri = match[1];
-      // 如果没有指定 authSource，默认使用 admin
-      if (!uri.includes('authSource=')) {
-        uri += uri.includes('?') ? '&' : '?';
-        uri += 'authSource=admin';
-      }
-      console.log('从 environment.local.ts 读取 MongoDB 连接字符串');
-      return uri;
-    }
-  } catch {
-    // ignore
-  }
+  if (process.env.NODE_ENV === 'production' && process.env.MONGODB_URI_PROD) return process.env.MONGODB_URI_PROD;
 
   console.error('请设置环境变量 MONGODB_URI，例如:');
   console.error('  MONGODB_URI="mongodb://user:pass@host:port/mch-prc" npx ts-node scripts/import-all-data.ts');
@@ -229,17 +216,21 @@ async function importEvents(personIdMap: Record<number, string>) {
       summary: e.summary || '',
       periodId: periodMap[year] || null,
       subEvents: e.subEvents || [],
-      source: e.source || '',
+      sourceIds: e.sourceIds || [],
     };
 
-    // detail
+    // detail — 兼容新旧格式
     if (e.detail) {
-      doc.detail = {
-        motive: e.detail.motive || '',
-        process: e.detail.process || '',
-        result: e.detail.result || '',
-        impact: e.detail.impact || '',
-      };
+      doc.detail = {};
+      for (const key of ['motive', 'process', 'result', 'impact'] as const) {
+        const field = e.detail[key];
+        if (!field) continue;
+        if (typeof field === 'object' && field.content) {
+          doc.detail[key] = { content: field.content, sourceIds: field.sourceIds || [] };
+        } else {
+          doc.detail[key] = field;
+        }
+      }
     }
 
     // impactFactor

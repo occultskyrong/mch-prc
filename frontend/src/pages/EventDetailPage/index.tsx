@@ -4,9 +4,10 @@ import { Card, Descriptions, Spin, Tag, Progress, Typography } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { eventService } from '../../services/eventService';
 import { personService } from '../../services/personService';
-import { Event } from '../../types/event';
+import { sourceService } from '../../services/sourceService';
+import { Event, SourceEntry } from '../../types/event';
 import { DIMENSION_LABELS } from '../../utils/impactFactor';
-import { getDetailContent, getDetailSourceTitles } from '../../utils/sourceRegistry';
+import { getDetailContent, getSourceTitles } from '../../utils/sourceRegistry';
 
 const { Title } = Typography;
 
@@ -19,6 +20,7 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true);
   const [event, setEvent] = useState<Event | null>(null);
   const [persons, setPersons] = useState<any[]>([]);
+  const [sources, setSources] = useState<SourceEntry[]>([]);
 
   useEffect(() => {
     if (id) loadData(id);
@@ -26,13 +28,15 @@ export default function EventDetailPage() {
 
   const loadData = async (eventId: string) => {
     try {
-      const [eventData, personsList] = await Promise.all([
+      const [eventData, personsList, sourcesList] = await Promise.all([
         eventService.findById(eventId),
         personService.list(),
+        sourceService.list(),
       ]);
       if (eventData) {
         setEvent(eventData);
         setPersons(personsList);
+        setSources(sourcesList);
       }
     } catch (e) {
       console.error(e);
@@ -42,10 +46,14 @@ export default function EventDetailPage() {
 
   const eventPersons = event?.personIds ? persons.filter(p => event!.personIds!.includes(p._id ?? String(p.id))) : [];
 
+  const getDetailSourceTitles = (field: any): string[] => {
+    const ids = !field || typeof field === 'string' ? [] : (field.sourceIds || []);
+    return getSourceTitles(ids, sources);
+  };
+
   if (loading) return <div style={{ padding: 40 }}><Spin tip="加载中..." /></div>;
   if (!event) return <div style={{ padding: 40 }}>未找到事件</div>;
 
-  // 使用服务端返回的结构化影响力因子
   const impact = event.impactFactor;
   if (!impact || !impact.dimensions) return <div style={{ padding: 40 }}>缺少影响力数据</div>;
 
@@ -55,18 +63,15 @@ export default function EventDetailPage() {
 
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 16px' }}>
-      {/* 返回 */}
       <Link to="/timeline" style={{ display: 'inline-flex', alignItems: 'center', marginBottom: 16, color: '#1890ff' }}>
         <ArrowLeftOutlined style={{ marginRight: 4 }} /> 返回时间轴
       </Link>
 
-      {/* 标题 */}
       <Title level={3} style={{ marginTop: 0 }}>{event.title}</Title>
       <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 13, marginBottom: 16 }}>
         {event.eventType}
       </Tag>
 
-      {/* 基本信息 */}
       <Card title="基本信息" style={{ marginBottom: 16 }}>
         <Descriptions column={2} bordered size="small">
           <Descriptions.Item label="时间">
@@ -80,13 +85,12 @@ export default function EventDetailPage() {
           <div style={{ marginTop: 12 }}>
             <span style={{ fontSize: 13, color: '#666', marginRight: 8 }}>参与人物：</span>
             {eventPersons.map(p => (
-              <Tag key={p.id} color="blue">{p.name}</Tag>
+              <Tag key={p._id} color="blue">{p.name}</Tag>
             ))}
           </div>
         )}
       </Card>
 
-      {/* 影响力因子 */}
       <Card title="史观影响力因子" style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 20 }}>
           <div style={{ textAlign: 'center' }}>
@@ -115,7 +119,6 @@ export default function EventDetailPage() {
           </div>
         </div>
 
-        {/* 9 维度条形图 */}
         <div style={{ display: 'grid', gap: 8 }}>
           {DIMENSION_TABLE_ORDER.map(key => {
             const val = d[key];
@@ -137,7 +140,6 @@ export default function EventDetailPage() {
         </div>
       </Card>
 
-      {/* 详细内容 */}
       {event.detail && (getDetailContent(event.detail.motive) || getDetailContent(event.detail.process) || getDetailContent(event.detail.result) || getDetailContent(event.detail.impact)) && (
         <Card title="详细内容" style={{ marginBottom: 16 }}>
           <Descriptions column={1} size="small">

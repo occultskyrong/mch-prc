@@ -26,10 +26,5 @@ npm-debug.log*
 .env.local
 .env.*.local
 
-# 配置文件中的敏感信息
-backend/src/config/environment.ts
-backend/src/config/environment.local.ts
-!backend/src/config/environment.ts.example
-
 # Cache
 .cache/

@@ -7,9 +7,10 @@ import './index.css';
 import { eventService } from '../../services/eventService';
 import { personService } from '../../services/personService';
 import { groupService } from '../../services/groupService';
+import { sourceService } from '../../services/sourceService';
 import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
-import { Event } from '../../types/event';
-import { getDetailContent, getDetailSourceTitles } from '../../utils/sourceRegistry';
+import { Event, SourceEntry } from '../../types/event';
+import { getDetailContent, getSourceTitles } from '../../utils/sourceRegistry';
 
 const { Title } = Typography;
 
@@ -52,6 +53,7 @@ const getId = (obj: any): string => String(obj._id ?? obj.id ?? '');
 export default function TimelinePage() {
   const [persons, setPersons] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
+  const [sources, setSources] = useState<SourceEntry[]>([]);
   const [loadingMeta, setLoadingMeta] = useState(true);
 
   const [headerExpanded, setHeaderExpanded] = useState(true);
@@ -69,6 +71,11 @@ export default function TimelinePage() {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const getDetailSourceTitles = (field: any): string[] => {
+    const ids = !field || typeof field === 'string' ? [] : (field.sourceIds || []);
+    return getSourceTitles(ids, sources);
+  };
 
   // 移动端检测
   useEffect(() => {
@@ -93,7 +100,7 @@ export default function TimelinePage() {
     }
   }, [selectedPeriod]);
 
-  // 加载人物和群体元数据
+  // 加载人物、群体和来源元数据
   useEffect(() => {
     loadMeta();
   }, []);
@@ -101,12 +108,14 @@ export default function TimelinePage() {
   const loadMeta = async () => {
     setLoadingMeta(true);
     try {
-      const [personsRes, groupsRes] = await Promise.all([
+      const [personsRes, groupsRes, sourcesRes] = await Promise.all([
         personService.list(),
         groupService.list(),
+        sourceService.list(),
       ]);
       setPersons(personsRes);
       setGroups(groupsRes);
+      setSources(sourcesRes);
     } catch (e) {
       console.error(e);
     }
