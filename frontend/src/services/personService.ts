@@ -2,7 +2,8 @@ import { api } from './api';
 
 export const personService = {
   list: async () => {
-    return api.get<any[]>('/persons');
+    const res = await api.get<any>('/persons?pageSize=1000');
+    return res.data || [];
   },
 
   findById: async (id: string) => {
