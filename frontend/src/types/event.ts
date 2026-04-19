@@ -1,20 +1,37 @@
+export interface DimensionScore {
+  score: number;
+  rationale: string;
+}
+
+export interface ImpactFactor {
+  dimensions: Record<string, DimensionScore>;
+  weightedSum: number;
+  scopeBonus: number;
+  scopeLabel: string;
+  durationBonus: number;
+  durationLabel: string;
+  finalScore: number;
+}
+
 export interface Event {
-  id: number;
+  _id?: string;
+  id?: number;
   title: string;
   startDate: string;
   endDate?: string;
-  isInstant: boolean;
+  isInstant?: boolean;
   eventType: string;
   location?: string;
-  summary: string;  // 简要概述
+  summary: string;
   detail?: {
     motive?: string;
     process?: string;
     result?: string;
     impact?: string;
   };
-  personIds?: number[];  // 参与人物ID
-  relatedEvents?: number[];  // 关联事件ID
+  impactFactor?: ImpactFactor;
+  personIds?: string[];
+  relatedEvents?: string[];
 }
 
 export interface EventCreateInput {
@@ -27,9 +44,18 @@ export interface EventCreateInput {
 }
 
 export interface EventListParams {
-  current?: number;
+  page?: number;
   pageSize?: number;
-  title?: string;
-  startDate?: string;
-  endDate?: string;
+  startYear?: number;
+  endYear?: number;
+  eventType?: string;
+  search?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }

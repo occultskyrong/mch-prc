@@ -1,24 +1,11 @@
-import { Person } from '../types/person';
-
-let personsData: Person[] = [];
-
-async function loadData() {
-  if (personsData.length === 0) {
-    const response = await fetch('/data/persons.json');
-    const data = await response.json();
-    personsData = data.persons;
-  }
-  return personsData;
-}
+import { api } from './api';
 
 export const personService = {
   list: async () => {
-    const data = await loadData();
-    return { data, count: data.length };
+    return api.get<any[]>('/persons');
   },
 
-  findById: async (id: number) => {
-    const data = await loadData();
-    return data.find(p => p.id === id) || null;
+  findById: async (id: string) => {
+    return api.get<any>(`/persons/${id}`);
   },
 };

@@ -1,35 +1,19 @@
-import { Event } from '../types/event';
-
-let eventsData: Event[] = [];
-
-async function loadData() {
-  if (eventsData.length === 0) {
-    const response = await fetch('/data/events.json');
-    const data = await response.json();
-    eventsData = data.events;
-  }
-  return eventsData;
-}
+import { api } from './api';
+import { Event, EventListParams, PaginatedResponse } from '../types/event';
 
 export const eventService = {
-  list: async (params?: { page?: number; pageSize?: number; title?: string }) => {
-    const data = await loadData();
-    let filtered = data;
-    if (params?.title) {
-      filtered = filtered.filter(e => e.title.includes(params.title!));
-    }
-    // 如果 pageSize 不指定或为 0，返回全部数据
-    if (!params?.pageSize) {
-      return { data: filtered, count: filtered.length };
-    }
-    const page = params?.page || 1;
-    const pageSize = params.pageSize;
-    const start = (page - 1) * pageSize;
-    return { data: filtered.slice(start, start + pageSize), count: filtered.length };
+  list: async (params?: EventListParams): Promise<PaginatedResponse<Event>> => {
+    return api.get<PaginatedResponse<Event>>('/events', {
+      page: params?.page,
+      pageSize: params?.pageSize,
+      startYear: params?.startYear,
+      endYear: params?.endYear,
+      eventType: params?.eventType,
+      search: params?.search,
+    });
   },
 
-  findById: async (id: number) => {
-    const data = await loadData();
-    return data.find(e => e.id === id) || null;
+  findById: async (id: string): Promise<Event | undefined> => {
+    return api.get<Event>(`/events/${id}`);
   },
 };
