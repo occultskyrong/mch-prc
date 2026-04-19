@@ -1,10 +1,6 @@
+import './env-bootstrap';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
-
-// 加载 .env 文件
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
