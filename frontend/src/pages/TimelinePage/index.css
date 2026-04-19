@@ -518,3 +518,19 @@
   position: sticky !important;
   z-index: 10;
 }
+
+/* 无限滚动加载指示器 */
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0;
+  color: #1890ff;
+}
+
+.no-more {
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  padding: 12px 0;
+}

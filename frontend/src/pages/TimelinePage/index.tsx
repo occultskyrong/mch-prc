@@ -1,16 +1,17 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Select, Input, Tag, Drawer, Descriptions, Typography, Space, Button, Tooltip, Empty, Table } from 'antd';
-import { SearchOutlined, CalendarOutlined, UserOutlined, TeamOutlined, MenuOutlined, CloseOutlined } from '@ant-design/icons';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { Select, Input, Tag, Drawer, Descriptions, Typography, Space, Button, Tooltip, Empty, Table, Spin } from 'antd';
+import { SearchOutlined, CalendarOutlined, UserOutlined, TeamOutlined, MenuOutlined, CloseOutlined, ExperimentOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import './index.css';
 import { eventService } from '../../services/eventService';
 import { personService } from '../../services/personService';
 import { groupService } from '../../services/groupService';
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import { Event } from '../../types/event';
 
 const { Title } = Typography;
 
-// 历史时期定义
 const HISTORICAL_PERIODS = [
   { key: '01', name: '鸦片战争时期', years: '1839-1860', startYear: 1839, endYear: 1860, color: '#f5222d', description: '林则徐禁烟、鸦片战争、南京条约、太平天国、第二次鸦片战争' },
   { key: '02', name: '洋务运动时期', years: '1861-1894', startYear: 1861, endYear: 1894, color: '#1890ff', description: '总理衙门设立、洋务运动推行、江南制造总局、中法战争、甲午战争爆发' },
@@ -20,7 +21,6 @@ const HISTORICAL_PERIODS = [
   { key: '06', name: '国民政府时期', years: '1927-1949', startYear: 1927, endYear: 1949, color: '#eb2f96', description: '中原大战、长征、遵义会议、西安事变、抗日战争、解放战争' },
 ];
 
-// 事件类型颜色映射
 const EVENT_TYPE_COLORS: Record<string, string> = {
   '战争': '#f5222d',
   '条约': '#1890ff',
@@ -29,7 +29,6 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   '事件': '#722ed1',
 };
 
-// 群体颜色映射
 const GROUP_COLORS: Record<string, string> = {
   '洋务派': '#2f54eb',
   '清廷': '#faad14',
@@ -46,38 +45,36 @@ const GROUP_COLORS: Record<string, string> = {
   '西北军': '#eb2f96',
 };
 
+// 统一获取 ID（兼容 _id 和 id）
+const getId = (obj: any): string => String(obj._id ?? obj.id ?? '');
+
 export default function TimelinePage() {
-  const [events, setEvents] = useState<Event[]>([]);
   const [persons, setPersons] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingMeta, setLoadingMeta] = useState(true);
 
-  // 移动端头部显示状态
   const [headerExpanded, setHeaderExpanded] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
-  // 筛选条件
   const [searchText, setSearchText] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
   const [startYear, setStartYear] = useState(1839);
   const [endYear, setEndYear] = useState(1949);
   const [eventTypeFilter, setEventTypeFilter] = useState<string[]>([]);
-  const [groupFilter, setGroupFilter] = useState<number[]>([]);
+  const [groupFilter, setGroupFilter] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'matrix-group' | 'matrix-person' | 'group' | 'person'>('matrix-group');
 
-  // 详情抽屉
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // 移动端检测
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      // 移动端默认收缩头部
-      if (mobile) {
-        setHeaderExpanded(false);
-      }
+      if (mobile) setHeaderExpanded(false);
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -95,234 +92,215 @@ export default function TimelinePage() {
     }
   }, [selectedPeriod]);
 
+  // 加载人物和群体元数据
+  useEffect(() => {
+    loadMeta();
+  }, []);
+
+  const loadMeta = async () => {
+    setLoadingMeta(true);
+    try {
+      const [personsRes, groupsRes] = await Promise.all([
+        personService.list(),
+        groupService.list(),
+      ]);
+      setPersons(personsRes);
+      setGroups(groupsRes);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoadingMeta(false);
+  };
+
+  // 构建 API 查询参数
+  const buildQueryParams = useCallback(() => {
+    const params: Record<string, any> = {
+      startYear,
+      endYear,
+    };
+    if (searchText) params.search = searchText;
+    if (eventTypeFilter.length > 0) params.eventType = eventTypeFilter[0];
+    if (groupFilter.length > 0) params.groupId = groupFilter[0];
+    return params;
+  }, [startYear, endYear, searchText, eventTypeFilter, groupFilter]);
+
+  // 矩阵视图：加载全部事件
+  const [matrixEvents, setMatrixEvents] = useState<Event[]>([]);
+  const [matrixLoading, setMatrixLoading] = useState(false);
+
+  useEffect(() => {
+    if (viewMode !== 'matrix-group' && viewMode !== 'matrix-person') return;
+    loadMatrixEvents();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, startYear, endYear, searchText, eventTypeFilter, groupFilter]);
+
+  const loadMatrixEvents = async () => {
+    setMatrixLoading(true);
+    try {
+      const result = await eventService.list({
+        ...buildQueryParams(),
+        page: 1,
+        pageSize: 10000,
+      });
+      setMatrixEvents(result.data);
+    } catch (e) {
+      console.error(e);
+    }
+    setMatrixLoading(false);
+  };
+
+  // 列表视图：使用无限滚动
+  const {
+    items: listEvents,
+    loading: listLoading,
+    hasMore,
+    total: listTotal,
+    loadMore,
+    reset: resetList,
+  } = useInfiniteScroll<Event>({
+    fetchFn: async (page, pageSize) => {
+      return eventService.list({
+        ...buildQueryParams(),
+        page,
+        pageSize,
+      });
+    },
+    pageSize: 30,
+    deps: [startYear, endYear, searchText, eventTypeFilter, groupFilter, viewMode],
+  });
+
+  // 无限滚动处理
+  const handleScroll = useCallback(() => {
+    if (viewMode === 'matrix-group' || viewMode === 'matrix-person') return;
+    const container = scrollContainerRef.current;
+    if (!container || !hasMore || listLoading) return;
+
+    const threshold = 200;
+    if (container.scrollHeight - container.scrollTop - container.clientHeight < threshold) {
+      loadMore();
+    }
+  }, [viewMode, hasMore, listLoading, loadMore]);
+
+  // 筛选条件变化时重置列表
+  useEffect(() => {
+    if (viewMode === 'group' || viewMode === 'person') {
+      resetList();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startYear, endYear, searchText, eventTypeFilter, groupFilter, viewMode]);
+
   // 根据年份获取所属时期
   const getPeriodByYear = (year: number): typeof HISTORICAL_PERIODS[0] | undefined => {
     return HISTORICAL_PERIODS.find(p => year >= p.startYear && year <= p.endYear);
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [eventsRes, personsRes, groupsRes] = await Promise.all([
-        eventService.list({ pageSize: 0 }),  // 获取全部数据
-        personService.list(),
-        groupService.list(),
-      ]);
-      setEvents(eventsRes.data);
-      setPersons(personsRes.data);
-      setGroups(groupsRes.data);
-    } catch (e) {
-      console.error(e);
-    }
-    setLoading(false);
-  };
-
-  // 筛选后的事件
-  const filteredEvents = useMemo(() => {
+  // 按群体和人物筛选事件
+  const filterEventsByGroupAndPerson = (events: Event[]) => {
     return events.filter(e => {
-      const year = new Date(e.startDate).getFullYear();
-
-      // 年份范围
-      if (year < startYear || year > endYear) return false;
-
-      // 搜索文本
-      if (searchText && !e.title.toLowerCase().includes(searchText.toLowerCase())) {
-        return false;
-      }
-
-      // 事件类型
-      if (eventTypeFilter.length > 0 && !eventTypeFilter.includes(e.eventType)) {
-        return false;
-      }
-
-      // 群体筛选
       if (groupFilter.length > 0) {
         const eventPersonIds = e.personIds || [];
-        const eventPersons = persons.filter(p => eventPersonIds.includes(p.id));
-        const eventGroupIds = eventPersons.flatMap(p => p.groupIds || []);
-        if (!eventGroupIds.some(gid => groupFilter.includes(gid))) {
+        const eventPersons = persons.filter(p => eventPersonIds.includes(getId(p)));
+        const eventGroupIds = eventPersons.flatMap((p: any) => p.groupIds || []);
+        if (!eventGroupIds.some((gid: any) => groupFilter.includes(String(gid)))) {
           return false;
         }
       }
-
       return true;
-    }).sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-  }, [events, startYear, endYear, searchText, eventTypeFilter, groupFilter, persons]);
+    });
+  };
 
-  // 按年份构建矩阵数据（时间上下，群体左右）
+  // 矩阵数据（时间×群体）
   const matrixByYearGroup = useMemo(() => {
     const rows: any[] = [];
-
-    // 只显示有事件的年份
     const yearsWithEvents = new Set<number>();
-    filteredEvents.forEach(e => {
-      yearsWithEvents.add(new Date(e.startDate).getFullYear());
-    });
-
-    // 按年份排序
+    matrixEvents.forEach(e => yearsWithEvents.add(new Date(e.startDate).getFullYear()));
     const sortedYears = Array.from(yearsWithEvents).sort((a, b) => a - b);
 
     sortedYears.forEach(year => {
       const period = getPeriodByYear(year);
-      const rowData: any = {
-        key: year,
-        year: year,
-        period: period,
-      };
-
-      // 每个群体的该年事件
+      const rowData: any = { key: year, year, period };
       groups.forEach(group => {
-        const groupPersons = persons.filter(p => p.groupIds?.includes(group.id));
-        const groupPersonIds = groupPersons.map(p => p.id);
-
-        const yearEvents = filteredEvents.filter(e => {
+        const groupPersons = persons.filter((p: any) => p.groupIds?.includes(group.id));
+        const groupPersonIds = groupPersons.map((p: any) => getId(p));
+        const yearEvents = matrixEvents.filter(e => {
           const eventYear = new Date(e.startDate).getFullYear();
           return eventYear === year && e.personIds?.some(pid => groupPersonIds.includes(pid));
         });
-
-        if (yearEvents.length > 0) {
-          rowData[group.id] = yearEvents;
-        }
+        if (yearEvents.length > 0) rowData[group.id] = yearEvents;
       });
-
       rows.push(rowData);
     });
-
     return rows;
-  }, [groups, persons, filteredEvents]);
+  }, [groups, persons, matrixEvents]);
 
-  // 按年份构建矩阵数据（时间上下，人物左右）
+  // 矩阵数据（时间×人物）
   const matrixByYearPerson = useMemo(() => {
     const rows: any[] = [];
-
-    // 只显示有事件的年份
     const yearsWithEvents = new Set<number>();
-    filteredEvents.forEach(e => {
-      yearsWithEvents.add(new Date(e.startDate).getFullYear());
-    });
-
+    matrixEvents.forEach(e => yearsWithEvents.add(new Date(e.startDate).getFullYear()));
     const sortedYears = Array.from(yearsWithEvents).sort((a, b) => a - b);
 
-    // 只显示参与了筛选事件的人物
-    const involvedPersonIds = new Set<number>();
-    filteredEvents.forEach(e => {
-      e.personIds?.forEach(pid => involvedPersonIds.add(pid));
-    });
-    const involvedPersons = persons.filter(p => involvedPersonIds.has(p.id)).slice(0, 30);
+    const involvedPersonIds = new Set<string>();
+    matrixEvents.forEach(e => e.personIds?.forEach(pid => involvedPersonIds.add(String(pid))));
+    const involvedPersons = persons.filter(p => involvedPersonIds.has(getId(p))).slice(0, 30);
 
     sortedYears.forEach(year => {
       const period = getPeriodByYear(year);
-      const rowData: any = {
-        key: year,
-        year: year,
-        period: period,
-      };
-
-      // 每个人物的该年事件
+      const rowData: any = { key: year, year, period };
       involvedPersons.forEach(person => {
-        const yearEvents = filteredEvents.filter(e => {
+        const yearEvents = matrixEvents.filter(e => {
           const eventYear = new Date(e.startDate).getFullYear();
-          return eventYear === year && e.personIds?.includes(person.id);
+          return eventYear === year && e.personIds?.includes(getId(person));
         });
-
-        if (yearEvents.length > 0) {
-          rowData[person.id] = yearEvents;
-        }
+        if (yearEvents.length > 0) rowData[getId(person)] = yearEvents;
       });
-
       rows.push(rowData);
     });
-
     return rows;
-  }, [persons, filteredEvents]);
+  }, [persons, matrixEvents]);
 
-  // 矩阵数据源
   const matrixDataSource = useMemo(() => {
     return viewMode === 'matrix-group' ? matrixByYearGroup : matrixByYearPerson;
   }, [viewMode, matrixByYearGroup, matrixByYearPerson]);
 
   // 按群体分组（列表视图）
   const eventsByGroup = useMemo(() => {
-    const map: Record<number, { group: any; events: Event[] }> = {};
-    groups.forEach(g => {
-      map[g.id] = { group: g, events: [] };
-    });
-
-    filteredEvents.forEach(e => {
+    const filtered = filterEventsByGroupAndPerson(listEvents);
+    const map: Record<string, { group: any; events: Event[] }> = {};
+    groups.forEach(g => { map[g.id] = { group: g, events: [] }; });
+    filtered.forEach(e => {
       const eventPersonIds = e.personIds || [];
-      const eventPersons = persons.filter(p => eventPersonIds.includes(p.id));
-      const eventGroupIds = eventPersons.flatMap(p => p.groupIds || []);
-      eventGroupIds.forEach((gid: number) => {
-        if (map[gid]) {
-          map[gid].events.push(e);
-        }
+      const eventPersons = persons.filter(p => eventPersonIds.includes(getId(p)));
+      const eventGroupIds = eventPersons.flatMap((p: any) => p.groupIds || []);
+      eventGroupIds.forEach((gid: any) => {
+        if (map[gid]) map[gid].events.push(e);
       });
     });
-
     return Object.values(map).filter(g => g.events.length > 0);
-  }, [filteredEvents, groups, persons]);
+  }, [listEvents, groups, persons, groupFilter]);
 
   // 按人物分组（列表视图）
   const eventsByPerson = useMemo(() => {
-    const map: Record<number, { person: any; events: Event[] }> = {};
-
-    filteredEvents.forEach(e => {
+    const filtered = filterEventsByGroupAndPerson(listEvents);
+    const map: Record<string, { person: any; events: Event[] }> = {};
+    filtered.forEach(e => {
       const eventPersonIds = e.personIds || [];
       eventPersonIds.forEach(pid => {
-        if (!map[pid]) {
-          const person = persons.find(p => p.id === pid);
-          if (person) {
-            map[pid] = { person, events: [] };
-          }
+        const key = String(pid);
+        if (!map[key]) {
+          const person = persons.find(p => getId(p) === key);
+          if (person) map[key] = { person, events: [] };
         }
-        if (map[pid]) {
-          map[pid].events.push(e);
-        }
+        if (map[key]) map[key].events.push(e);
       });
     });
-
     return Object.values(map)
       .sort((a, b) => b.events.length - a.events.length)
       .slice(0, 30);
-  }, [filteredEvents, persons]);
+  }, [listEvents, persons]);
 
-  // 获取事件的参与人物
-  const getEventPersons = (event: Event) => {
-    return persons.filter(p => event.personIds?.includes(p.id));
-  };
-
-  // 获取人物的群体
-  const getPersonGroups = (person: any) => {
-    return groups.filter(g => person.groupIds?.includes(g.id));
-  };
-
-  // 事件类型选项
-  const eventTypeOptions = useMemo(() => {
-    const types = [...new Set(events.map(e => e.eventType))];
-    return types.map(t => ({ label: t, value: t }));
-  }, [events]);
-
-  // 群体选项
-  const groupOptions = useMemo(() => {
-    return groups.map(g => ({ label: g.name, value: g.id }));
-  }, [groups]);
-
-  // 年份范围选项
-  const yearOptions = useMemo(() => {
-    const years = [];
-    for (let y = 1839; y <= 1949; y++) {
-      years.push({ label: `${y}年`, value: y });
-    }
-    return years;
-  }, []);
-
-  // 矩阵表格列配置（时间上下，群体/人物左右）
+  // 矩阵表格列配置
   const matrixColumns = useMemo(() => {
-    // 时期列（左侧固定，显示时期名称，竖排文字）
     const periodCol = {
       title: '时期',
       dataIndex: 'period',
@@ -331,10 +309,8 @@ export default function TimelinePage() {
       width: 40,
       render: (period: typeof HISTORICAL_PERIODS[0] | undefined, row: any) => {
         if (!period) return null;
-        // 只在每个时期的第一年显示时期名称
         const year = row.year;
         if (year !== period.startYear) return null;
-        // 竖排文字展示，包含时期名称和年份范围
         const nameChars = period.name.split('');
         const yearsChars = period.years.split('');
         return (
@@ -352,8 +328,7 @@ export default function TimelinePage() {
       onCell: (row: any) => {
         const period = getPeriodByYear(row.year);
         if (!period) return {};
-        // 合并同一时期的单元格
-        const periodYears = matrixDataSource.filter(r => getPeriodByYear(r.year)?.key === period.key);
+        const periodYears = matrixDataSource.filter((r: any) => getPeriodByYear(r.year)?.key === period.key);
         const isFirstYear = row.year === period.startYear;
         const rowSpan = isFirstYear ? periodYears.length : 0;
         return {
@@ -367,13 +342,12 @@ export default function TimelinePage() {
             position: 'sticky',
             left: 0,
             zIndex: 10,
-            background: `${period.color}08`  // 确固定列有背景色
+            background: `${period.color}08`,
           }
         };
       }
     };
 
-    // 年份列（第二列）
     const yearCol = {
       title: '年份',
       dataIndex: 'year',
@@ -383,15 +357,8 @@ export default function TimelinePage() {
       render: (year: number) => {
         const period = getPeriodByYear(year);
         return (
-          <span
-            style={{
-              fontWeight: 600,
-              color: period?.color || '#1890ff',
-              cursor: 'pointer',
-              textDecoration: 'underline'
-            }}
-            onClick={() => setSelectedYear(year)}
-          >
+          <span style={{ fontWeight: 600, color: period?.color || '#1890ff', cursor: 'pointer', textDecoration: 'underline' }}
+            onClick={() => setSelectedYear(year)}>
             {year}
           </span>
         );
@@ -401,26 +368,17 @@ export default function TimelinePage() {
       })
     };
 
-    // 群体/人物列
     let cols: any[] = [];
     if (viewMode === 'matrix-group') {
-      // 只显示有事件的群体
-      const groupIdsWithEvents = new Set<number>();
-      filteredEvents.forEach(e => {
-        const eventPersons = persons.filter(p => e.personIds?.includes(p.id));
-        eventPersons.forEach((p: any) => {
-          (p.groupIds || []).forEach((gid: number) => groupIdsWithEvents.add(gid));
-        });
+      const groupIdsWithEvents = new Set<string>();
+      matrixEvents.forEach(e => {
+        const eventPersons = persons.filter(p => e.personIds?.includes(getId(p)));
+        eventPersons.forEach((p: any) => (p.groupIds || []).forEach((gid: any) => groupIdsWithEvents.add(String(gid))));
       });
-
       cols = groups
-        .filter(g => groupIdsWithEvents.has(g.id))
+        .filter(g => groupIdsWithEvents.has(String(g.id)))
         .map(group => ({
-          title: (
-            <Tag color={GROUP_COLORS[group.name] || '#666'} style={{ fontSize: 12 }}>
-              {group.name}
-            </Tag>
-          ),
+          title: <Tag color={GROUP_COLORS[group.name] || '#666'} style={{ fontSize: 12 }}>{group.name}</Tag>,
           dataIndex: group.id,
           key: group.id,
           width: 150,
@@ -429,15 +387,8 @@ export default function TimelinePage() {
             return (
               <div className="matrix-cell">
                 {events.map(e => (
-                  <Tooltip
-                    key={e.id}
-                    title={`${e.title}\n${dayjs(e.startDate).format('M月D日')}`}
-                  >
-                    <Tag
-                      color={EVENT_TYPE_COLORS[e.eventType] || '#666'}
-                      className="matrix-event-tag"
-                      onClick={() => setSelectedEvent(e)}
-                    >
+                  <Tooltip key={getId(e)} title={`${e.title}\n${dayjs(e.startDate).format('M月D日')}`}>
+                    <Tag color={EVENT_TYPE_COLORS[e.eventType] || '#666'} className="matrix-event-tag" onClick={() => setSelectedEvent(e)}>
                       {e.title}
                     </Tag>
                   </Tooltip>
@@ -447,40 +398,25 @@ export default function TimelinePage() {
           }
         }));
     } else {
-      // 人物视图
-      const involvedPersonIds = new Set<number>();
-      filteredEvents.forEach(e => {
-        e.personIds?.forEach(pid => involvedPersonIds.add(pid));
-      });
-
+      const involvedPersonIds = new Set<string>();
+      matrixEvents.forEach(e => e.personIds?.forEach(pid => involvedPersonIds.add(String(pid))));
       cols = persons
-        .filter(p => involvedPersonIds.has(p.id))
+        .filter(p => involvedPersonIds.has(getId(p)))
         .slice(0, 30)
         .map(person => {
-          const personGroups = getPersonGroups(person);
+          const personGroups = groups.filter((g: any) => person.groupIds?.includes(g.id));
           return {
-            title: (
-              <Tooltip title={personGroups.map(g => g.name).join('、')}>
-                <span style={{ fontWeight: 500 }}>{person.name}</span>
-              </Tooltip>
-            ),
-            dataIndex: person.id,
-            key: person.id,
+            title: <Tooltip title={personGroups.map((g: any) => g.name).join('、')}><span style={{ fontWeight: 500 }}>{person.name}</span></Tooltip>,
+            dataIndex: getId(person),
+            key: getId(person),
             width: 100,
             render: (events: Event[] | undefined) => {
               if (!events || events.length === 0) return null;
               return (
                 <div className="matrix-cell">
                   {events.map(e => (
-                    <Tooltip
-                      key={e.id}
-                      title={`${e.title}\n${dayjs(e.startDate).format('M月D日')}`}
-                    >
-                      <Tag
-                        color={EVENT_TYPE_COLORS[e.eventType] || '#666'}
-                        className="matrix-event-tag"
-                        onClick={() => setSelectedEvent(e)}
-                      >
+                    <Tooltip key={getId(e)} title={`${e.title}\n${dayjs(e.startDate).format('M月D日')}`}>
+                      <Tag color={EVENT_TYPE_COLORS[e.eventType] || '#666'} className="matrix-event-tag" onClick={() => setSelectedEvent(e)}>
                         {e.title}
                       </Tag>
                     </Tooltip>
@@ -493,134 +429,99 @@ export default function TimelinePage() {
     }
 
     return [periodCol, yearCol, ...cols];
-  }, [groups, persons, filteredEvents, viewMode, matrixDataSource]);
+  }, [groups, persons, matrixEvents, viewMode, matrixDataSource]);
+
+  // 获取事件的参与人物
+  const getEventPersons = (event: Event) => {
+    return persons.filter(p => event.personIds?.includes(getId(p)));
+  };
+
+  // 获取人物的群体
+  const getPersonGroups = (person: any) => {
+    return groups.filter(g => person.groupIds?.includes(g.id));
+  };
+
+  const eventTypeOptions = useMemo(() => {
+    return Object.keys(EVENT_TYPE_COLORS).map(t => ({ label: t, value: t }));
+  }, []);
+
+  const groupOptions = useMemo(() => {
+    return groups.map(g => ({ label: g.name, value: String(g.id) }));
+  }, [groups]);
+
+  const yearOptions = useMemo(() => {
+    const years = [];
+    for (let y = 1839; y <= 1949; y++) {
+      years.push({ label: `${y}年`, value: y });
+    }
+    return years;
+  }, []);
 
   return (
     <div className="timeline-page">
-      {/* 移动端头部切换按钮 */}
       {isMobile && (
         <div className="mobile-header-toggle">
-          <Button
-            type="text"
-            icon={headerExpanded ? <CloseOutlined /> : <MenuOutlined />}
-            onClick={() => setHeaderExpanded(!headerExpanded)}
-            style={{ fontSize: 18 }}
-          />
+          <Button type="text" icon={headerExpanded ? <CloseOutlined /> : <MenuOutlined />}
+            onClick={() => setHeaderExpanded(!headerExpanded)} style={{ fontSize: 18 }} />
           <span className="mobile-title">中国近代史时间轴</span>
         </div>
       )}
 
-      {/* 时期概览 */}
       {(!isMobile || headerExpanded) && (
         <div className="period-overview">
-        {HISTORICAL_PERIODS.map(period => (
-          <Tooltip key={period.key} title={`${period.years}: ${period.description}`}>
-            <div
-              className={`period-chip ${selectedPeriod === period.key ? 'selected' : ''}`}
-              style={{ backgroundColor: selectedPeriod === period.key ? period.color : `${period.color}20`, borderColor: period.color }}
-              onClick={() => setSelectedPeriod(selectedPeriod === period.key ? null : period.key)}
-            >
-              <div className="period-color-bar" style={{ backgroundColor: period.color }} />
-              <span className="period-name" style={{ color: selectedPeriod === period.key ? '#fff' : period.color }}>{period.name}</span>
-              <span className="period-years">{period.years}</span>
-            </div>
-          </Tooltip>
-        ))}
-      </div>
+          {HISTORICAL_PERIODS.map(period => (
+            <Tooltip key={period.key} title={`${period.years}: ${period.description}`}>
+              <div className={`period-chip ${selectedPeriod === period.key ? 'selected' : ''}`}
+                style={{ backgroundColor: selectedPeriod === period.key ? period.color : `${period.color}20`, borderColor: period.color }}
+                onClick={() => setSelectedPeriod(selectedPeriod === period.key ? null : period.key)}>
+                <div className="period-color-bar" style={{ backgroundColor: period.color }} />
+                <span className="period-name" style={{ color: selectedPeriod === period.key ? '#fff' : period.color }}>{period.name}</span>
+                <span className="period-years">{period.years}</span>
+              </div>
+            </Tooltip>
+          ))}
+        </div>
       )}
 
-      {/* 顶部筛选栏 */}
       {(!isMobile || headerExpanded) && (
         <div className="filter-bar">
-        <div className="filter-left">
-          <Input
-            placeholder="搜索事件..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={e => setSearchText(e.target.value)}
-            style={{ width: 200 }}
-            allowClear
-          />
-
-          <Select
-            placeholder="起始年份"
-            value={startYear}
-            onChange={(v) => { setStartYear(v); setSelectedPeriod(null); }}
-            options={yearOptions}
-            style={{ width: 100 }}
-          />
-
-          <Select
-            placeholder="结束年份"
-            value={endYear}
-            onChange={(v) => { setEndYear(v); setSelectedPeriod(null); }}
-            options={yearOptions}
-            style={{ width: 100 }}
-          />
-
-          <Select
-            mode="multiple"
-            placeholder="事件类型"
-            value={eventTypeFilter}
-            onChange={setEventTypeFilter}
-            options={eventTypeOptions}
-            style={{ width: 150 }}
-            allowClear
-            maxTagCount={2}
-          />
-
-          <Select
-            mode="multiple"
-            placeholder="群体"
-            value={groupFilter}
-            onChange={setGroupFilter}
-            options={groupOptions}
-            style={{ width: 150 }}
-            allowClear
-            maxTagCount={2}
-          />
+          <div className="filter-left">
+            <Input placeholder="搜索事件..." prefix={<SearchOutlined />}
+              value={searchText} onChange={e => setSearchText(e.target.value)}
+              style={{ width: 200 }} allowClear />
+            <Select placeholder="起始年份" value={startYear}
+              onChange={(v) => { setStartYear(v); setSelectedPeriod(null); }}
+              options={yearOptions} style={{ width: 100 }} />
+            <Select placeholder="结束年份" value={endYear}
+              onChange={(v) => { setEndYear(v); setSelectedPeriod(null); }}
+              options={yearOptions} style={{ width: 100 }} />
+            <Select mode="multiple" placeholder="事件类型"
+              value={eventTypeFilter} onChange={setEventTypeFilter}
+              options={eventTypeOptions} style={{ width: 150 }} allowClear maxTagCount={2} />
+            <Select mode="multiple" placeholder="群体"
+              value={groupFilter} onChange={setGroupFilter}
+              options={groupOptions} style={{ width: 150 }} allowClear maxTagCount={2} />
+          </div>
+          <div className="filter-right">
+            <Space>
+              <Button type={viewMode === 'matrix-group' ? 'primary' : 'default'}
+                icon={<CalendarOutlined />} onClick={() => setViewMode('matrix-group')}>时间×群体</Button>
+              <Button type={viewMode === 'matrix-person' ? 'primary' : 'default'}
+                icon={<UserOutlined />} onClick={() => setViewMode('matrix-person')}>时间×人物</Button>
+              <Button type={viewMode === 'group' ? 'primary' : 'default'}
+                icon={<TeamOutlined />} onClick={() => setViewMode('group')}>按群体</Button>
+              <Button type={viewMode === 'person' ? 'primary' : 'default'}
+                icon={<UserOutlined />} onClick={() => setViewMode('person')}>按人物</Button>
+            </Space>
+          </div>
+          <div className="filter-count">
+            {(viewMode === 'matrix-group' || viewMode === 'matrix-person')
+              ? `共 ${matrixEvents.length} 个事件`
+              : `已加载 ${listEvents.length} / ${listTotal} 个事件`}
+          </div>
         </div>
-
-        <div className="filter-right">
-          <Space>
-            <Button
-              type={viewMode === 'matrix-group' ? 'primary' : 'default'}
-              icon={<CalendarOutlined />}
-              onClick={() => setViewMode('matrix-group')}
-            >
-              时间×群体
-            </Button>
-            <Button
-              type={viewMode === 'matrix-person' ? 'primary' : 'default'}
-              icon={<UserOutlined />}
-              onClick={() => setViewMode('matrix-person')}
-            >
-              时间×人物
-            </Button>
-            <Button
-              type={viewMode === 'group' ? 'primary' : 'default'}
-              icon={<TeamOutlined />}
-              onClick={() => setViewMode('group')}
-            >
-              按群体
-            </Button>
-            <Button
-              type={viewMode === 'person' ? 'primary' : 'default'}
-              icon={<UserOutlined />}
-              onClick={() => setViewMode('person')}
-            >
-              按人物
-            </Button>
-          </Space>
-        </div>
-
-        <div className="filter-count">
-          共 {filteredEvents.length} 个事件
-        </div>
-      </div>
       )}
 
-      {/* 颜色说明图例 */}
       {(!isMobile || headerExpanded) && (
         <div className="color-legend">
           <div className="legend-section">
@@ -638,141 +539,108 @@ export default function TimelinePage() {
         </div>
       )}
 
-      {/* 主内容区 */}
-      <div className="timeline-content">
-        {loading ? (
-          <div className="loading-center">加载中...</div>
-        ) : filteredEvents.length === 0 ? (
-          <Empty description="没有找到匹配的事件" />
-        ) : viewMode === 'matrix-group' || viewMode === 'matrix-person' ? (
-          /* 矩阵视图 */
-          <Table
-            columns={matrixColumns}
-            dataSource={matrixDataSource}
-            scroll={{ x: 'max-content', y: 'calc(100vh - 140px)' }}
-            bordered
-            size="small"
-            pagination={false}
-          />
-        ) : viewMode === 'group' ? (
-          /* 群体列表视图 */
-          <div className="group-view">
-            {eventsByGroup.map(({ group, events }) => (
-              <div key={group.id} className="group-section">
-                <div className="group-header">
-                  <Tag color={GROUP_COLORS[group.name] || '#666'} style={{ fontSize: 14, padding: '4px 12px' }}>
-                    {group.name}
-                  </Tag>
-                  <span className="group-count">{events.length} 个事件</span>
-                </div>
-                <div className="group-events">
-                  {events.map(event => (
-                    <div
-                      key={event.id}
-                      className="event-card-mini"
-                      onClick={() => setSelectedEvent(event)}
-                    >
-                      <span className="event-year">{dayjs(event.startDate).format('YYYY年M月')}</span>
-                      <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>
-                        {event.eventType}
-                      </Tag>
-                      <span className="event-title">{event.title}</span>
+      <div className="timeline-content" ref={scrollContainerRef} onScroll={handleScroll}>
+        {loadingMeta ? (
+          <div className="loading-center"><Spin tip="加载中..." /></div>
+        ) : (viewMode === 'matrix-group' || viewMode === 'matrix-person') ? (
+          matrixLoading ? (
+            <div className="loading-center"><Spin tip="加载事件中..." /></div>
+          ) : matrixDataSource.length === 0 ? (
+            <Empty description="没有找到匹配的事件" />
+          ) : (
+            <Table columns={matrixColumns} dataSource={matrixDataSource}
+              scroll={{ x: 'max-content', y: 'calc(100vh - 140px)' }} bordered size="small" pagination={false} />
+          )
+        ) : (viewMode === 'group' || viewMode === 'person') ? (
+          <>
+            {eventsByGroup.length === 0 && eventsByPerson.length === 0 && !listLoading ? (
+              <Empty description="没有找到匹配的事件" />
+            ) : viewMode === 'group' ? (
+              <div className="group-view">
+                {eventsByGroup.map(({ group, events: grpEvents }) => (
+                  <div key={group.id} className="group-section">
+                    <div className="group-header">
+                      <Tag color={GROUP_COLORS[group.name] || '#666'} style={{ fontSize: 14, padding: '4px 12px' }}>{group.name}</Tag>
+                      <span className="group-count">{grpEvents.length} 个事件</span>
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          /* 人物列表视图 */
-          <div className="person-view">
-            {eventsByPerson.map(({ person, events }) => (
-              <div key={person.id} className="person-section">
-                <div className="person-header">
-                  <UserOutlined style={{ fontSize: 16, color: '#1890ff' }} />
-                  <span className="person-name">{person.name}</span>
-                  {person.groupIds?.map((gid: number) => {
-                    const g = groups.find(gr => gr.id === gid);
-                    return g ? (
-                      <Tag key={gid} color={GROUP_COLORS[g.name] || '#666'} style={{ fontSize: 12 }}>
-                        {g.name}
-                      </Tag>
-                    ) : null;
-                  })}
-                  <span className="person-count">{events.length} 个事件</span>
-                </div>
-                <div className="person-events">
-                  {events.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()).map(event => (
-                    <div
-                      key={event.id}
-                      className="event-card-mini"
-                      onClick={() => setSelectedEvent(event)}
-                    >
-                      <span className="event-year">{dayjs(event.startDate).format('YYYY年M月')}</span>
-                      <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>
-                        {event.eventType}
-                      </Tag>
-                      <span className="event-title">{event.title}</span>
+                    <div className="group-events">
+                      {grpEvents.map(event => (
+                        <div key={getId(event)} className="event-card-mini" onClick={() => setSelectedEvent(event)}>
+                          <span className="event-year">{dayjs(event.startDate).format('YYYY年M月')}</span>
+                          <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{event.eventType}</Tag>
+                          <span className="event-title">{event.title}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            ) : (
+              <div className="person-view">
+                {eventsByPerson.map(({ person, events: pEvents }) => (
+                  <div key={getId(person)} className="person-section">
+                    <div className="person-header">
+                      <UserOutlined style={{ fontSize: 16, color: '#1890ff' }} />
+                      <span className="person-name">{person.name}</span>
+                      {person.groupIds?.map((gid: any) => {
+                        const g = groups.find((gr: any) => String(gr.id) === String(gid));
+                        return g ? <Tag key={gid} color={GROUP_COLORS[g.name] || '#666'} style={{ fontSize: 12 }}>{g.name}</Tag> : null;
+                      })}
+                      <span className="person-count">{pEvents.length} 个事件</span>
+                    </div>
+                    <div className="person-events">
+                      {pEvents.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()).map(event => (
+                        <div key={getId(event)} className="event-card-mini" onClick={() => setSelectedEvent(event)}>
+                          <span className="event-year">{dayjs(event.startDate).format('YYYY年M月')}</span>
+                          <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{event.eventType}</Tag>
+                          <span className="event-title">{event.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {listLoading && (
+              <div className="loading-indicator"><Spin tip="加载更多..." /></div>
+            )}
+            {!hasMore && listEvents.length > 0 && (
+              <div className="no-more">— 已加载全部 {listTotal} 个事件 —</div>
+            )}
+          </>
+        ) : null}
       </div>
 
-      {/* 事件详情抽屉 */}
-      <Drawer
-        title={selectedEvent?.title}
-        placement="right"
-        width={500}
-        open={!!selectedEvent}
-        onClose={() => setSelectedEvent(null)}
-      >
+      <Drawer title={selectedEvent?.title} placement="right" width={500}
+        open={!!selectedEvent} onClose={() => setSelectedEvent(null)}
+        extra={
+          <Link to={`/event/${selectedEvent ? getId(selectedEvent) : ''}`}>
+            <Button icon={<ExperimentOutlined />} size="small">影响力分析</Button>
+          </Link>
+        }>
         {selectedEvent && (
           <div className="event-detail">
             <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="时间">
-                {dayjs(selectedEvent.startDate).format('YYYY年M月D日')}
-              </Descriptions.Item>
-              <Descriptions.Item label="类型">
-                <Tag color={EVENT_TYPE_COLORS[selectedEvent.eventType]}>
-                  {selectedEvent.eventType}
-                </Tag>
-              </Descriptions.Item>
-              {selectedEvent.location && (
-                <Descriptions.Item label="地点">{selectedEvent.location}</Descriptions.Item>
-              )}
+              <Descriptions.Item label="时间">{dayjs(selectedEvent.startDate).format('YYYY年M月D日')}</Descriptions.Item>
+              <Descriptions.Item label="类型"><Tag color={EVENT_TYPE_COLORS[selectedEvent.eventType]}>{selectedEvent.eventType}</Tag></Descriptions.Item>
+              {selectedEvent.location && <Descriptions.Item label="地点">{selectedEvent.location}</Descriptions.Item>}
               <Descriptions.Item label="概述">{selectedEvent.summary}</Descriptions.Item>
             </Descriptions>
-
             <Title level={5} style={{ marginTop: 16 }}>详细内容</Title>
             <Descriptions column={1} size="small">
-              {selectedEvent.detail?.motive && (
-                <Descriptions.Item label="动机">{selectedEvent.detail.motive}</Descriptions.Item>
-              )}
-              {selectedEvent.detail?.process && (
-                <Descriptions.Item label="经过">{selectedEvent.detail.process}</Descriptions.Item>
-              )}
-              {selectedEvent.detail?.result && (
-                <Descriptions.Item label="结果">{selectedEvent.detail.result}</Descriptions.Item>
-              )}
-              {selectedEvent.detail?.impact && (
-                <Descriptions.Item label="影响">{selectedEvent.detail.impact}</Descriptions.Item>
-              )}
+              {selectedEvent.detail?.motive && <Descriptions.Item label="动机">{selectedEvent.detail.motive}</Descriptions.Item>}
+              {selectedEvent.detail?.process && <Descriptions.Item label="经过">{selectedEvent.detail.process}</Descriptions.Item>}
+              {selectedEvent.detail?.result && <Descriptions.Item label="结果">{selectedEvent.detail.result}</Descriptions.Item>}
+              {selectedEvent.detail?.impact && <Descriptions.Item label="影响">{selectedEvent.detail.impact}</Descriptions.Item>}
             </Descriptions>
-
             <Title level={5} style={{ marginTop: 16 }}>参与人物</Title>
             <div className="person-list">
               {getEventPersons(selectedEvent).map(person => (
-                <div key={person.id} className="person-item">
+                <div key={getId(person)} className="person-item">
                   <UserOutlined style={{ marginRight: 8, color: '#1890ff' }} />
                   <span className="person-name">{person.name}</span>
                   {getPersonGroups(person).map(g => (
-                    <Tag key={g.id} color={GROUP_COLORS[g.name]} style={{ marginLeft: 8 }}>
-                      {g.name}
-                    </Tag>
+                    <Tag key={g.id} color={GROUP_COLORS[g.name]} style={{ marginLeft: 8 }}>{g.name}</Tag>
                   ))}
                 </div>
               ))}
@@ -781,34 +649,18 @@ export default function TimelinePage() {
         )}
       </Drawer>
 
-      {/* 年份事件列表抽屉 */}
-      <Drawer
-        title={`${selectedYear}年事件列表`}
-        placement="right"
-        width={400}
-        open={!!selectedYear}
-        onClose={() => setSelectedYear(null)}
-      >
+      <Drawer title={`${selectedYear}年事件列表`} placement="right" width={400}
+        open={!!selectedYear} onClose={() => setSelectedYear(null)}>
         {selectedYear && (
           <div className="year-event-list">
-            {filteredEvents
+            {(viewMode === 'matrix-group' || viewMode === 'matrix-person' ? matrixEvents : listEvents)
               .filter(e => new Date(e.startDate).getFullYear() === selectedYear)
               .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
               .map(event => (
-                <div
-                  key={event.id}
-                  className="year-event-item"
-                  onClick={() => {
-                    setSelectedYear(null);
-                    setSelectedEvent(event);
-                  }}
-                >
-                  <div className="year-event-date">
-                    {dayjs(event.startDate).format('M月D日')}
-                  </div>
-                  <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>
-                    {event.eventType}
-                  </Tag>
+                <div key={getId(event)} className="year-event-item"
+                  onClick={() => { setSelectedYear(null); setSelectedEvent(event); }}>
+                  <div className="year-event-date">{dayjs(event.startDate).format('M月D日')}</div>
+                  <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{event.eventType}</Tag>
                   <div className="year-event-title">{event.title}</div>
                 </div>
               ))}
