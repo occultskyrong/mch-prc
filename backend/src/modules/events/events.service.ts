@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Event } from './events.schema';
 import { QueryEventsDto, CreateEventDto } from './events.dto';
+import { ImpactFactorCalculator } from '../../common/impact-factor';
 
 @Injectable()
 export class EventsService {
@@ -13,7 +14,7 @@ export class EventsService {
 
   // 获取事件列表
   async findAll(query: QueryEventsDto) {
-    const { page = 1, pageSize = 10, year, eventType, groupId, search } = query;
+    const { page = 1, pageSize = 10, year, startYear, endYear, eventType, groupId, search } = query;
     const skip = (page - 1) * pageSize;
 
     // 构建查询条件
@@ -23,6 +24,11 @@ export class EventsService {
       const start = new Date(year, 0, 1);
       const end = new Date(year, 11, 31);
       filter.startDate = { $gte: start, $lte: end };
+    } else if (startYear || endYear) {
+      const dateFilter: any = {};
+      if (startYear) dateFilter.$gte = new Date(startYear, 0, 1);
+      if (endYear) dateFilter.$lte = new Date(endYear, 11, 31);
+      filter.startDate = dateFilter;
     }
 
     if (eventType) {
@@ -70,14 +76,24 @@ export class EventsService {
 
   // 创建事件
   async create(createEventDto: CreateEventDto) {
-    const newEvent = new this.eventModel(createEventDto);
+    const dto = { ...createEventDto };
+
+    // 自动计算影响力因子
+    dto.impactFactor = this.__calcImpact(dto);
+
+    const newEvent = new this.eventModel(dto);
     return newEvent.save();
   }
 
   // 更新事件
   async update(id: string, updateEventDto: CreateEventDto) {
+    const dto = { ...updateEventDto };
+
+    // 重新计算影响力因子
+    dto.impactFactor = this.__calcImpact(dto);
+
     return this.eventModel
-      .findByIdAndUpdate(id, updateEventDto, { new: true })
+      .findByIdAndUpdate(id, dto, { new: true })
       .exec();
   }
 
@@ -106,5 +122,31 @@ export class EventsService {
     ]);
 
     return { total, byType, byYear };
+  }
+
+  // 计算影响力因子
+  private __calcImpact(dto: CreateEventDto) {
+    const calculator = new ImpactFactorCalculator();
+    const result = calculator.calculate({
+      title: dto.title || '',
+      eventType: dto.eventType || '事件',
+      location: dto.location || '',
+      startDate: dto.startDate,
+      endDate: dto.endDate,
+      summary: dto.summary,
+      detail: dto.detail,
+      subEventsCount: dto.subEvents?.length || 0,
+      personCount: dto.personIds?.length || 0,
+    });
+
+    return {
+      dimensions: result.dimensions,
+      weightedSum: result.weightedSum,
+      scopeBonus: result.scopeBonus,
+      scopeLabel: '',
+      durationBonus: result.durationBonus,
+      durationLabel: '',
+      finalScore: result.finalScore,
+    };
   }
 }
