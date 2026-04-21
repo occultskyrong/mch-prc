@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Select, Input, Tag, Drawer, Descriptions, Typography, Space, Button, Tooltip, Empty, Table, Spin } from 'antd';
-import { SearchOutlined, CalendarOutlined, UserOutlined, TeamOutlined, MenuOutlined, CloseOutlined, ExperimentOutlined } from '@ant-design/icons';
+import { Select, Input, Tag, Drawer, Descriptions, Typography, Space, Button, Tooltip, Empty, Table, Spin, Modal } from 'antd';
+import { SearchOutlined, CalendarOutlined, UserOutlined, TeamOutlined, MenuOutlined, CloseOutlined, ExperimentOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import './index.css';
 import { eventService } from '../../services/eventService';
@@ -23,12 +23,20 @@ const HISTORICAL_PERIODS = [
   { key: '06', name: '国民政府时期', years: '1927-1949', startYear: 1927, endYear: 1949, color: '#eb2f96', description: '中原大战、长征、遵义会议、西安事变、抗日战争、解放战争' },
 ];
 
-const EVENT_TYPE_COLORS: Record<string, string> = {
-  '战争': '#f5222d',
-  '条约': '#1890ff',
-  '起义': '#fa8c16',
-  '改革': '#52c41a',
-  '事件': '#722ed1',
+const EVENT_TYPE_LABELS: Record<number, string> = {
+  1: '战争',
+  2: '条约',
+  3: '起义',
+  4: '改革',
+  5: '事件',
+};
+
+const EVENT_TYPE_COLORS: Record<number, string> = {
+  1: '#f5222d',
+  2: '#1890ff',
+  3: '#fa8c16',
+  4: '#52c41a',
+  5: '#722ed1',
 };
 
 const GROUP_COLORS: Record<string, string> = {
@@ -64,9 +72,11 @@ export default function TimelinePage() {
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
   const [startYear, setStartYear] = useState(1839);
   const [endYear, setEndYear] = useState(1949);
-  const [eventTypeFilter, setEventTypeFilter] = useState<string[]>([]);
+  const [eventTypeFilter, setEventTypeFilter] = useState<number[]>([]);
   const [groupFilter, setGroupFilter] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'matrix-group' | 'matrix-person' | 'group' | 'person'>('matrix-group');
+  const [showSubEvents, setShowSubEvents] = useState(false);
+  const [legendVisible, setLegendVisible] = useState(false);
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
@@ -132,8 +142,10 @@ export default function TimelinePage() {
     if (searchText) params.search = searchText;
     if (eventTypeFilter.length > 0) params.eventType = eventTypeFilter[0];
     if (groupFilter.length > 0) params.groupId = groupFilter[0];
+    if (showSubEvents) params.eventLevel = undefined; // 不限制层级，返回全部
+    else params.eventLevel = 0; // 默认只显示主事件
     return params;
-  }, [startYear, endYear, searchText, eventTypeFilter, groupFilter]);
+  }, [startYear, endYear, searchText, eventTypeFilter, groupFilter, showSubEvents]);
 
   // 矩阵视图：按年份范围分批加载
   const [matrixEvents, setMatrixEvents] = useState<Event[]>([]);
@@ -189,7 +201,7 @@ export default function TimelinePage() {
     matrixLoadingRef.current = false;
     loadMatrixBatch(startYear, true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, startYear, endYear, searchText, eventTypeFilter, groupFilter]);
+  }, [viewMode, startYear, endYear, searchText, eventTypeFilter, groupFilter, showSubEvents]);
 
   // 矩阵表格滚动监听 — 接近底部时加载下一批
   useEffect(() => {
@@ -230,7 +242,7 @@ export default function TimelinePage() {
       });
     },
     pageSize: 30,
-    deps: [startYear, endYear, searchText, eventTypeFilter, groupFilter],
+    deps: [startYear, endYear, searchText, eventTypeFilter, groupFilter, showSubEvents],
   });
 
   // 无限滚动处理
@@ -453,7 +465,7 @@ export default function TimelinePage() {
               <div className="matrix-cell">
                 {events.map(e => (
                   <Tooltip key={getId(e)} title={`${e.title}\n${dayjs(e.startDate).format('M月D日')}`}>
-                    <Tag color={EVENT_TYPE_COLORS[e.eventType] || '#666'} className="matrix-event-tag" onClick={() => setSelectedEvent(e)}>
+                    <Tag color={EVENT_TYPE_COLORS[e.eventType] || '#666'} className={`matrix-event-tag${e.eventLevel ? ' sub-event-tag' : ''}`} onClick={() => setSelectedEvent(e)}>
                       {e.title}
                     </Tag>
                   </Tooltip>
@@ -507,7 +519,10 @@ export default function TimelinePage() {
   };
 
   const eventTypeOptions = useMemo(() => {
-    return Object.keys(EVENT_TYPE_COLORS).map(t => ({ label: t, value: t }));
+    return Object.entries(EVENT_TYPE_LABELS).map(([val, label]) => ({
+      label,
+      value: Number(val),
+    }));
   }, []);
 
   const groupOptions = useMemo(() => {
@@ -541,7 +556,7 @@ export default function TimelinePage() {
                 {searchText && startYear !== 1839 && ' · '}
                 {startYear !== 1839 || endYear !== 1949 ? `${startYear}-${endYear}` : '1839-1949'}
                 {selectedPeriod && ` · ${HISTORICAL_PERIODS.find(p => p.key === selectedPeriod)?.name}`}
-                {eventTypeFilter.length > 0 && ` · ${eventTypeFilter.join('、')}`}
+                {eventTypeFilter.length > 0 && ` · ${eventTypeFilter.map(t => EVENT_TYPE_LABELS[t]).join('、')}`}
                 {groupFilter.length > 0 && ` · ${groupFilter.map(gid => groups.find(g => String(g.id) === String(gid))?.name).join('、')}`}
               </span>
               <Button type="text" size="small" icon={<MenuOutlined />}
@@ -582,6 +597,14 @@ export default function TimelinePage() {
                 </div>
                 <div className="filter-right">
                   <Space>
+                    <Tooltip title="配色说明">
+                    <Button type="text" size="small" shape="circle" icon={<QuestionCircleOutlined />}
+                      onClick={() => setLegendVisible(true)} style={{ color: '#999' }} />
+                  </Tooltip>
+                  <Button type={showSubEvents ? 'primary' : 'default'}
+                      icon={<ExperimentOutlined />} onClick={() => setShowSubEvents(!showSubEvents)}>
+                      {showSubEvents ? '显示子事件' : '隐藏子事件'}
+                    </Button>
                     <Button type={viewMode === 'matrix-group' ? 'primary' : 'default'}
                       icon={<CalendarOutlined />} onClick={() => setViewMode('matrix-group')}>时间×群体</Button>
                     <Button type={viewMode === 'matrix-person' ? 'primary' : 'default'}
@@ -602,20 +625,6 @@ export default function TimelinePage() {
                   {(viewMode === 'matrix-group' || viewMode === 'matrix-person')
                     ? `共 ${matrixEvents.length} 个事件`
                     : `已加载 ${listEvents.length} / ${listTotal} 个事件`}
-                </div>
-              </div>
-              <div className="color-legend">
-                <div className="legend-section">
-                  <span className="legend-title">事件类型:</span>
-                  {Object.entries(EVENT_TYPE_COLORS).map(([type, color]) => (
-                    <Tag key={type} color={color} style={{ fontSize: 11, margin: '2px' }}>{type}</Tag>
-                  ))}
-                </div>
-                <div className="legend-section">
-                  <span className="legend-title">群体:</span>
-                  {Object.entries(GROUP_COLORS).slice(0, 8).map(([name, color]) => (
-                    <Tag key={name} color={color} style={{ fontSize: 11, margin: '2px' }}>{name}</Tag>
-                  ))}
                 </div>
               </div>
             </div>
@@ -657,9 +666,9 @@ export default function TimelinePage() {
                     </div>
                     <div className="group-events">
                       {grpEvents.map(event => (
-                        <div key={getId(event)} className="event-card-mini" onClick={() => setSelectedEvent(event)}>
+                        <div key={getId(event)} className={`event-card-mini${event.eventLevel ? ' sub-event' : ''}`} onClick={() => setSelectedEvent(event)}>
                           <span className="event-year">{dayjs(event.startDate).format('YYYY年M月')}</span>
-                          <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{event.eventType}</Tag>
+                    <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</Tag>
                           <span className="event-title">{event.title}</span>
                         </div>
                       ))}
@@ -682,9 +691,9 @@ export default function TimelinePage() {
                     </div>
                     <div className="person-events">
                       {pEvents.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()).map(event => (
-                        <div key={getId(event)} className="event-card-mini" onClick={() => setSelectedEvent(event)}>
+                        <div key={getId(event)} className={`event-card-mini${event.eventLevel ? ' sub-event' : ''}`} onClick={() => setSelectedEvent(event)}>
                           <span className="event-year">{dayjs(event.startDate).format('YYYY年M月')}</span>
-                          <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{event.eventType}</Tag>
+                    <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</Tag>
                           <span className="event-title">{event.title}</span>
                         </div>
                       ))}
@@ -714,7 +723,7 @@ export default function TimelinePage() {
           <div className="event-detail">
             <Descriptions column={1} bordered size="small">
               <Descriptions.Item label="时间">{dayjs(selectedEvent.startDate).format('YYYY年M月D日')}</Descriptions.Item>
-              <Descriptions.Item label="类型"><Tag color={EVENT_TYPE_COLORS[selectedEvent.eventType]}>{selectedEvent.eventType}</Tag></Descriptions.Item>
+              <Descriptions.Item label="类型"><Tag color={EVENT_TYPE_COLORS[selectedEvent.eventType]}>{EVENT_TYPE_LABELS[selectedEvent.eventType]}</Tag></Descriptions.Item>
               {selectedEvent.location && <Descriptions.Item label="地点">{selectedEvent.location}</Descriptions.Item>}
               <Descriptions.Item label="概述">{selectedEvent.summary}</Descriptions.Item>
             </Descriptions>
@@ -780,13 +789,43 @@ export default function TimelinePage() {
                 <div key={getId(event)} className="year-event-item"
                   onClick={() => { setSelectedYear(null); setSelectedEvent(event); }}>
                   <div className="year-event-date">{dayjs(event.startDate).format('M月D日')}</div>
-                  <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{event.eventType}</Tag>
+                  <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</Tag>
                   <div className="year-event-title">{event.title}</div>
                 </div>
               ))}
           </div>
         )}
       </Drawer>
+
+      <Modal title="配色说明" open={legendVisible} onCancel={() => setLegendVisible(false)}
+        footer={null} width={400}>
+        <div className="legend-modal-content">
+          <div className="legend-block">
+            <span className="legend-block-title">事件类型</span>
+            <div className="legend-tags">
+              {Object.entries(EVENT_TYPE_LABELS).map(([val, label]) => (
+                <Tag key={val} color={EVENT_TYPE_COLORS[Number(val)]}>{label}</Tag>
+              ))}
+            </div>
+          </div>
+          <div className="legend-block">
+            <span className="legend-block-title">历史时期</span>
+            <div className="legend-tags">
+              {HISTORICAL_PERIODS.map(period => (
+                <Tag key={period.key} color={period.color}>{period.name} ({period.years})</Tag>
+              ))}
+            </div>
+          </div>
+          <div className="legend-block">
+            <span className="legend-block-title">群体</span>
+            <div className="legend-tags">
+              {Object.entries(GROUP_COLORS).map(([name, color]) => (
+                <Tag key={name} color={color}>{name}</Tag>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

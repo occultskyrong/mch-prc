@@ -48,13 +48,17 @@ export interface Event {
   startDate: string;
   endDate?: string;
   isInstant?: boolean;
-  eventType: string;
+  eventType: number;
+  eventLevel?: number;
   location?: string;
   summary: string;
   detail?: EventDetail;
   impactFactor?: ImpactFactor;
   personIds?: string[];
   relatedEvents?: string[];
+  parentEventId?: string;
+  /** 子事件列表（仅主事件在详情查询时返回） */
+  subEvents?: Event[];
   /** 事件整体涉及的来源 ID（替代旧的 string source 字段） */
   sourceIds?: number[];
 }
@@ -64,7 +68,7 @@ export interface EventCreateInput {
   startDate: string;
   endDate?: string;
   isInstant?: boolean;
-  eventType?: string;
+  eventType?: number;
   summaryContent?: string;
 }
 
@@ -73,7 +77,9 @@ export interface EventListParams {
   pageSize?: number;
   startYear?: number;
   endYear?: number;
-  eventType?: string;
+  eventType?: number;
+  eventLevel?: number;
+  parentEventId?: string;
   search?: string;
 }
 

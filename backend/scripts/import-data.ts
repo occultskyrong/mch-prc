@@ -165,6 +165,15 @@ async function importPersons(groupIdMap: Record<number, string>): Promise<Record
 
 // ==================== Events 导入 ====================
 
+// eventType 数字映射: 1=战争, 2=条约, 3=起义, 4=改革, 5=事件
+const EVENT_TYPE_MAP: Record<string, number> = {
+  '战争': 1,
+  '条约': 2,
+  '起义': 3,
+  '改革': 4,
+  '事件': 5,
+};
+
 async function importEvents(personIdMap: Record<number, string>) {
   const events = readJson('events.json');
   console.log(`JSON 数据共 ${events.length} 条事件`);
@@ -211,11 +220,11 @@ async function importEvents(personIdMap: Record<number, string>) {
       startDate: new Date(e.startDate),
       endDate: e.endDate ? new Date(e.endDate) : null,
       isInstant: e.isInstant ?? true,
-      eventType: e.eventType || '事件',
+      eventType: EVENT_TYPE_MAP[e.eventType] ?? 5,
+      eventLevel: e.eventLevel ?? 0,
       location: e.location || '',
       summary: e.summary || '',
       periodId: periodMap[year] || null,
-      subEvents: e.subEvents || [],
       sourceIds: e.sourceIds || [],
     };
 

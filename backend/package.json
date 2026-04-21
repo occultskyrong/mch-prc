@@ -4,9 +4,8 @@
   "description": "中国近代史时间轴后端服务",
   "scripts": {
     "build": "nest build",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:prod": "node dist/main"
+    "dev": "nest start --watch",
+    "start": "node dist/main"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

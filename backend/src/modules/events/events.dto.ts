@@ -5,8 +5,10 @@ export class QueryEventsDto {
   year?: number;
   startYear?: number;
   endYear?: number;
-  eventType?: string;
+  eventType?: number;
+  eventLevel?: number;
   groupId?: string;
+  parentEventId?: string;
   search?: string;
 }
 
@@ -32,7 +34,8 @@ export class CreateEventDto {
   title: string;
   startDate: Date;
   endDate?: Date;
-  eventType?: string;
+  eventType?: number;
+  eventLevel?: number;
   location?: string;
   summary?: string;
   detail?: {
@@ -43,11 +46,8 @@ export class CreateEventDto {
   };
   impactFactor?: ImpactFactorDto;
   periodId?: string;
+  parentEventId?: string;
   personIds?: string[];
-  subEvents?: {
-    title: string;
-    date?: Date;
-    content?: string;
-  }[];
-  source?: string;
+  relatedEvents?: string[];
+  sourceIds?: number[];
 }

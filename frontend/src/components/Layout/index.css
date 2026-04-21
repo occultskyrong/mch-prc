@@ -3,3 +3,31 @@
   display: flex;
   flex-direction: column;
 }
+
+/* 紧凑表格单元格 */
+.layout-container .ant-table-small .ant-table-cell {
+  padding: 4px 8px !important;
+}
+
+.layout-container .ant-table-small .ant-table-thead > tr > th {
+  padding: 6px 8px !important;
+}
+
+/* 紧凑 Card 内容 */
+.layout-container .ant-card-small .ant-card-body {
+  padding: 12px !important;
+}
+
+/* 紧凑 Typography 间距 */
+.layout-container .ant-typography {
+  margin-bottom: 0.5em !important;
+}
+
+/* 紧凑 Collapse */
+.layout-container .ant-collapse-small .ant-collapse-header {
+  padding: 6px 12px !important;
+}
+
+.layout-container .ant-collapse-small .ant-collapse-content-box {
+  padding: 8px 12px !important;
+}

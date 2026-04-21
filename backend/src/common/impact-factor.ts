@@ -27,7 +27,8 @@ export interface ImpactBreakdown {
 
 export interface EventInput {
   title: string;
-  eventType: string;
+  eventType: number;
+  eventLevel?: number;
   location: string;
   startDate: Date;
   endDate?: Date;
@@ -202,10 +203,10 @@ export const DURATION_BONUSES = {
 } as const;
 
 // ==================== 事件类型基准 ====================
-// 用于规则推导的起始参考
+// eventType 数字映射: 1=战争, 2=条约, 3=起义, 4=改革, 5=事件
 
-export const EVENT_TYPE_BASELINES: Record<string, Record<string, number>> = {
-  '战争': {
+export const EVENT_TYPE_BASELINES: Record<number, Record<string, number>> = {
+  1: { // 战争
     politicalChange: 7.5,
     economicImpact: 6.5,
     militaryScale: 9.5,
@@ -216,7 +217,7 @@ export const EVENT_TYPE_BASELINES: Record<string, Record<string, number>> = {
     institutionalLegacy: 6.0,
     historicalTurningPoint: 7.5,
   },
-  '条约': {
+  2: { // 条约
     politicalChange: 5.5,
     economicImpact: 6.5,
     militaryScale: 3.0,
@@ -227,7 +228,7 @@ export const EVENT_TYPE_BASELINES: Record<string, Record<string, number>> = {
     institutionalLegacy: 6.5,
     historicalTurningPoint: 6.5,
   },
-  '起义': {
+  3: { // 起义
     politicalChange: 7.0,
     economicImpact: 4.5,
     militaryScale: 7.5,
@@ -238,7 +239,7 @@ export const EVENT_TYPE_BASELINES: Record<string, Record<string, number>> = {
     institutionalLegacy: 5.5,
     historicalTurningPoint: 7.0,
   },
-  '改革': {
+  4: { // 改革
     politicalChange: 6.5,
     economicImpact: 7.0,
     militaryScale: 3.0,
@@ -249,7 +250,7 @@ export const EVENT_TYPE_BASELINES: Record<string, Record<string, number>> = {
     institutionalLegacy: 7.5,
     historicalTurningPoint: 6.0,
   },
-  '事件': {
+  5: { // 事件
     politicalChange: 3.0,
     economicImpact: 2.0,
     militaryScale: 2.0,
@@ -343,7 +344,7 @@ export class ImpactFactorCalculator {
    * 计算 9 个维度分数
    */
   private __calculateDimensions(event: EventInput): ImpactBreakdown['dimensions'] {
-    const baselines = EVENT_TYPE_BASELINES[event.eventType] ?? EVENT_TYPE_BASELINES['事件'];
+    const baselines = EVENT_TYPE_BASELINES[event.eventType] ?? EVENT_TYPE_BASELINES[5];
     const hasManual = Object.keys(event.manualDimensionScores ?? {}).length > 0;
 
     const entries: [keyof ImpactBreakdown['dimensions'], number][] = [
@@ -389,7 +390,7 @@ export class ImpactFactorCalculator {
   ): number {
     let score = base;
 
-    // 子事件数量 → 复杂度加成
+    // 子事件数量 → 复杂度加成（仅主事件有）
     const subCount = event.subEventsCount ?? 0;
     if (subCount > 0) {
       const complexityBonus = Math.min(subCount * 0.08, 0.5);

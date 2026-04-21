@@ -26,12 +26,12 @@ const DIMENSION_WEIGHTS: Record<string, number> = {
   historicalTurningPoint: 0.05,
 };
 
-const EVENT_TYPE_BASELINES: Record<string, Record<string, number>> = {
-  '战争': { politicalChange: 7.5, economicImpact: 6.5, militaryScale: 9.5, socialStructure: 6.5, ideologicalCultural: 5.5, internationalRelations: 7.0, territorialSovereignty: 7.0, institutionalLegacy: 6.0, historicalTurningPoint: 7.5 },
-  '条约': { politicalChange: 5.5, economicImpact: 6.5, militaryScale: 3.0, socialStructure: 5.0, ideologicalCultural: 5.0, internationalRelations: 7.5, territorialSovereignty: 8.0, institutionalLegacy: 6.5, historicalTurningPoint: 6.5 },
-  '起义': { politicalChange: 7.0, economicImpact: 4.5, militaryScale: 7.5, socialStructure: 5.5, ideologicalCultural: 6.0, internationalRelations: 4.0, territorialSovereignty: 3.5, institutionalLegacy: 5.5, historicalTurningPoint: 7.0 },
-  '改革': { politicalChange: 6.5, economicImpact: 7.0, militaryScale: 3.0, socialStructure: 6.5, ideologicalCultural: 6.5, internationalRelations: 4.5, territorialSovereignty: 2.5, institutionalLegacy: 7.5, historicalTurningPoint: 6.0 },
-  '事件': { politicalChange: 3.0, economicImpact: 2.0, militaryScale: 2.0, socialStructure: 2.5, ideologicalCultural: 2.5, internationalRelations: 2.0, territorialSovereignty: 2.0, institutionalLegacy: 2.5, historicalTurningPoint: 2.5 },
+const EVENT_TYPE_BASELINES: Record<number, Record<string, number>> = {
+  1: { politicalChange: 7.5, economicImpact: 6.5, militaryScale: 9.5, socialStructure: 6.5, ideologicalCultural: 5.5, internationalRelations: 7.0, territorialSovereignty: 7.0, institutionalLegacy: 6.0, historicalTurningPoint: 7.5 },
+  2: { politicalChange: 5.5, economicImpact: 6.5, militaryScale: 3.0, socialStructure: 5.0, ideologicalCultural: 5.0, internationalRelations: 7.5, territorialSovereignty: 8.0, institutionalLegacy: 6.5, historicalTurningPoint: 6.5 },
+  3: { politicalChange: 7.0, economicImpact: 4.5, militaryScale: 7.5, socialStructure: 5.5, ideologicalCultural: 6.0, internationalRelations: 4.0, territorialSovereignty: 3.5, institutionalLegacy: 5.5, historicalTurningPoint: 7.0 },
+  4: { politicalChange: 6.5, economicImpact: 7.0, militaryScale: 3.0, socialStructure: 6.5, ideologicalCultural: 6.5, internationalRelations: 4.5, territorialSovereignty: 2.5, institutionalLegacy: 7.5, historicalTurningPoint: 6.0 },
+  5: { politicalChange: 3.0, economicImpact: 2.0, militaryScale: 2.0, socialStructure: 2.5, ideologicalCultural: 2.5, internationalRelations: 2.0, territorialSovereignty: 2.0, institutionalLegacy: 2.5, historicalTurningPoint: 2.5 },
 };
 
 const SCORING_CRITERIA: Record<string, Record<string, string>> = {
@@ -191,7 +191,7 @@ function weightedSum(dimensions: Record<string, DimensionScore>): number {
 }
 
 function calculateDimensions(event: any): Record<string, DimensionScore> {
-  const baselines = EVENT_TYPE_BASELINES[event.eventType] ?? EVENT_TYPE_BASELINES['事件'];
+  const baselines = EVENT_TYPE_BASELINES[event.eventType] ?? EVENT_TYPE_BASELINES[5];
   const dimensionKeys = ['politicalChange', 'economicImpact', 'militaryScale', 'socialStructure', 'ideologicalCultural', 'internationalRelations', 'territorialSovereignty', 'institutionalLegacy', 'historicalTurningPoint'];
 
   const result: Record<string, DimensionScore> = {};

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, Descriptions, Spin, Tag, Progress, Typography } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import { eventService } from '../../services/eventService';
 import { personService } from '../../services/personService';
 import { sourceService } from '../../services/sourceService';
@@ -11,8 +12,12 @@ import { getDetailContent, getSourceTitles } from '../../utils/sourceRegistry';
 
 const { Title } = Typography;
 
-const EVENT_TYPE_COLORS: Record<string, string> = {
-  '战争': '#f5222d', '条约': '#1890ff', '起义': '#fa8c16', '改革': '#52c41a', '事件': '#722ed1',
+const EVENT_TYPE_LABELS: Record<number, string> = {
+  1: '战争', 2: '条约', 3: '起义', 4: '改革', 5: '事件',
+};
+
+const EVENT_TYPE_COLORS: Record<number, string> = {
+  1: '#f5222d', 2: '#1890ff', 3: '#fa8c16', 4: '#52c41a', 5: '#722ed1',
 };
 
 export default function EventDetailPage() {
@@ -51,28 +56,28 @@ export default function EventDetailPage() {
     return getSourceTitles(ids, sources);
   };
 
-  if (loading) return <div style={{ padding: 40 }}><Spin tip="加载中..." /></div>;
-  if (!event) return <div style={{ padding: 40 }}>未找到事件</div>;
+  if (loading) return <div style={{ padding: 20 }}><Spin tip="加载中..." /></div>;
+  if (!event) return <div style={{ padding: 20 }}>未找到事件</div>;
 
   const impact = event.impactFactor;
-  if (!impact || !impact.dimensions) return <div style={{ padding: 40 }}>缺少影响力数据</div>;
+  if (!impact || !impact.dimensions) return <div style={{ padding: 20 }}>缺少影响力数据</div>;
 
   const d = impact.dimensions;
   const dimEntries = Object.entries(d) as [string, { score: number; rationale: string }][];
   const sortedDims = [...dimEntries].sort((a, b) => b[1].score - a[1].score);
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 16px' }}>
-      <Link to="/timeline" style={{ display: 'inline-flex', alignItems: 'center', marginBottom: 16, color: '#1890ff' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '12px 16px' }}>
+      <Link to="/timeline" style={{ display: 'inline-flex', alignItems: 'center', marginBottom: 8, color: '#1890ff' }}>
         <ArrowLeftOutlined style={{ marginRight: 4 }} /> 返回时间轴
       </Link>
 
-      <Title level={3} style={{ marginTop: 0 }}>{event.title}</Title>
+      <Title level={4} style={{ marginTop: 0, marginBottom: 8 }}>{event.title}</Title>
       <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 13, marginBottom: 16 }}>
-        {event.eventType}
+        {EVENT_TYPE_LABELS[event.eventType] || event.eventType}
       </Tag>
 
-      <Card title="基本信息" style={{ marginBottom: 16 }}>
+      <Card title="基本信息" style={{ marginBottom: 8 }} size="small">
         <Descriptions column={2} bordered size="small">
           <Descriptions.Item label="时间">
             {new Date(event.startDate).toLocaleDateString('zh-CN')}
@@ -91,7 +96,7 @@ export default function EventDetailPage() {
         )}
       </Card>
 
-      <Card title="史观影响力因子" style={{ marginBottom: 16 }}>
+      <Card title="史观影响力因子" style={{ marginBottom: 8 }} size="small">
         <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 20 }}>
           <div style={{ textAlign: 'center' }}>
             <Progress
@@ -141,7 +146,7 @@ export default function EventDetailPage() {
       </Card>
 
       {event.detail && (getDetailContent(event.detail.motive) || getDetailContent(event.detail.process) || getDetailContent(event.detail.result) || getDetailContent(event.detail.impact)) && (
-        <Card title="详细内容" style={{ marginBottom: 16 }}>
+        <Card title="详细内容" style={{ marginBottom: 8 }} size="small">
           <Descriptions column={1} size="small">
             {getDetailContent(event.detail.motive) && (
               <Descriptions.Item label="动机">
@@ -176,6 +181,29 @@ export default function EventDetailPage() {
               </Descriptions.Item>
             )}
           </Descriptions>
+        </Card>
+      )}
+
+      {event.subEvents && event.subEvents.length > 0 && (
+        <Card title={`子事件（${event.subEvents.length}）`} style={{ marginBottom: 8 }} size="small">
+          {event.subEvents.map(sub => (
+            <Link key={sub._id} to={`/event/${sub._id}`} style={{ display: 'block', textDecoration: 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
+                <Tag color={EVENT_TYPE_COLORS[sub.eventType] || '#666'} style={{ fontSize: 11 }}>
+                  {EVENT_TYPE_LABELS[sub.eventType] || sub.eventType}
+                </Tag>
+                <span style={{ fontSize: 12, color: '#999', minWidth: 80 }}>
+                  {dayjs(sub.startDate).format('YYYY年M月D日')}
+                </span>
+                <span style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{sub.title}</span>
+                {sub.impactFactor && (
+                  <span style={{ fontSize: 12, color: sub.impactFactor.finalScore >= 80 ? '#52c41a' : '#999' }}>
+                    {sub.impactFactor.finalScore}分
+                  </span>
+                )}
+              </div>
+            </Link>
+          ))}
         </Card>
       )}
     </div>

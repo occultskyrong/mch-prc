@@ -96,26 +96,27 @@ export default function AlgorithmPage() {
   }));
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '12px 16px' }}>
       {/* 标题 */}
-      <Title level={2}>
+      <Title level={3} style={{ marginTop: 0, marginBottom: 4 }}>
         <ExperimentOutlined style={{ marginRight: 8, color: '#1890ff' }} />
         史观影响力因子算法
       </Title>
-      <Paragraph type="secondary">
+      <Paragraph type="secondary" style={{ marginTop: 0, marginBottom: 12 }}>
         Historical Perspective Impact Factor (HPIF) — 基于五史观理论，通过 9 维度加权评分，量化中国近代史事件的历史影响力。
       </Paragraph>
 
       {/* 算法概述 */}
       <Card
         title={<><CalculatorOutlined /> 算法概述</>}
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 8 }}
+        size="small"
       >
-        <Paragraph>
+        <Paragraph style={{ marginBottom: 4 }}>
           史观影响力因子算法综合五种主流史观的分析框架，将每个事件的历史影响力分解为 9 个可量化的维度。
           每个维度按 <Text strong>1–10 分</Text>评分，加权求和后通过公式映射到 <Text strong>0–1000 分</Text>的标准化评分体系。
         </Paragraph>
-        <Paragraph>
+        <Paragraph style={{ marginBottom: 4 }}>
           <Text strong>核心公式：</Text>
           <Text code>最终分数 = min(1000, 加权总分 × 80 + 100 + 范围加成 + 持续加成)</Text>
         </Paragraph>
@@ -124,7 +125,8 @@ export default function AlgorithmPage() {
       {/* 五史观理论基础 */}
       <Card
         title={<><BookOutlined /> 五史观理论基础</>}
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 8 }}
+        size="small"
       >
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           {FIVE_PERSPECTIVES.map(p => (
@@ -144,7 +146,8 @@ export default function AlgorithmPage() {
       {/* 9 维度权重 */}
       <Card
         title={<><BarChartOutlined /> 9 维评分体系</>}
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 8 }}
+        size="small"
       >
         <Table
           dataSource={DIMENSION_TABLE.map((d, i) => ({ ...d, index: i + 1, weightValue: DIMENSION_WEIGHTS[d.key] }))}
@@ -175,7 +178,8 @@ export default function AlgorithmPage() {
       {/* 评分标准 */}
       <Card
         title="各维度评分标准"
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 8 }}
+        size="small"
       >
         <Collapse items={criteriaPanels} defaultActiveKey={[]} size="small" />
       </Card>
@@ -183,7 +187,8 @@ export default function AlgorithmPage() {
       {/* 事件类型基准分 */}
       <Card
         title="事件类型基准分"
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 8 }}
+        size="small"
       >
         <Paragraph type="secondary" style={{ marginBottom: 12 }}>
           不同类型的事件有预设基准分（1–10 分），作为自动评分的起点。规则修正在此基础上叠加。
@@ -201,24 +206,25 @@ export default function AlgorithmPage() {
       {/* 计算公式 */}
       <Card
         title={<><RocketOutlined /> 计算公式</>}
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 8 }}
+        size="small"
       >
-        <Paragraph>
+        <Paragraph style={{ marginBottom: 2 }}>
           <Text strong>Step 1 — 加权求和：</Text>将 9 个维度分数乘以各自权重，得到加权总分（范围 1–10）
         </Paragraph>
-        <Paragraph>
+        <Paragraph style={{ marginBottom: 2 }}>
           <Text strong>Step 2 — 基础分映射：</Text>
           <Text code>基础分 = 加权总分 × 80 + 100</Text>（映射到 180–900 分）
         </Paragraph>
-        <Paragraph>
+        <Paragraph style={{ marginBottom: 2 }}>
           <Text strong>Step 3 — 范围加成：</Text>
           全国性 +40 / 多省区域 +20 / 局部地区 +0
         </Paragraph>
-        <Paragraph>
+        <Paragraph style={{ marginBottom: 2 }}>
           <Text strong>Step 4 — 持续加成：</Text>
           影响 &gt; 50 年 +30 / 影响 20–50 年 +10 / 影响 &lt; 20 年 +0
         </Paragraph>
-        <Paragraph>
+        <Paragraph style={{ marginBottom: 0 }}>
           <Text strong>Step 5 — 最终分数：</Text>
           <Text code>最终 = min(1000, 基础分 + 范围加成 + 持续加成)</Text>
         </Paragraph>

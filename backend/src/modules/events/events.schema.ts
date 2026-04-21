@@ -1,21 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-// 子事件 Schema
-@Schema()
-export class SubEvent {
-  @Prop({ required: true })
-  title: string;
-
-  @Prop()
-  date: Date;
-
-  @Prop()
-  content: string;
-}
-
-export const SubEventSchema = SchemaFactory.createForClass(SubEvent);
-
 // 带来源标记的详情字段 Schema
 @Schema()
 export class EventDetailField {
@@ -85,7 +70,7 @@ export class ImpactFactor {
 
 export const ImpactFactorSchema = SchemaFactory.createForClass(ImpactFactor);
 
-// 主事件 Schema
+// 事件 Schema
 @Schema({ timestamps: true, collection: 'events' })
 export class Event extends Document {
   @Prop({ required: true })
@@ -97,8 +82,11 @@ export class Event extends Document {
   @Prop()
   endDate: Date;
 
-  @Prop({ enum: ['战争', '条约', '起义', '改革', '事件'] })
-  eventType: string;
+  @Prop({ type: Number })
+  eventType: number;
+
+  @Prop({ type: Number, default: 0 })
+  eventLevel: number;
 
   @Prop()
   location: string;
@@ -115,14 +103,14 @@ export class Event extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Period' })
   periodId: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, ref: 'Event' })
+  parentEventId: Types.ObjectId;
+
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Person' }] })
   personIds: Types.ObjectId[];
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Event' }] })
   relatedEvents: Types.ObjectId[];
-
-  @Prop({ type: [SubEventSchema] })
-  subEvents: SubEvent[];
 
   @Prop({ type: [Number] })
   sourceIds: number[];
