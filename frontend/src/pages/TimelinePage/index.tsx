@@ -192,7 +192,7 @@ export default function TimelinePage() {
 
     const onScroll = () => {
       if (matrixLoadingRef.current) return;
-      const threshold = 300;
+      const threshold = 800;
       if (scrollBody.scrollHeight - scrollBody.scrollTop - scrollBody.clientHeight < threshold) {
         loadMatrixBatch(nextBatchStartYear);
       }
@@ -228,7 +228,7 @@ export default function TimelinePage() {
     const container = scrollContainerRef.current;
     if (!container || !hasMore || listLoading) return;
 
-    const threshold = 200;
+    const threshold = 600;
     if (container.scrollHeight - container.scrollTop - container.clientHeight < threshold) {
       loadMore();
     }
@@ -392,10 +392,6 @@ export default function TimelinePage() {
             verticalAlign: 'top',
             textAlign: 'center',
             padding: '4px 2px',
-            position: 'sticky',
-            left: 0,
-            zIndex: 10,
-            background: `${period.color}08`,
           }
         };
       }
@@ -417,7 +413,7 @@ export default function TimelinePage() {
         );
       },
       onCell: () => ({
-        style: { position: 'sticky', left: 40, zIndex: 9, background: 'rgba(255, 252, 245, 0.98)' }
+        style: { background: 'rgba(255, 252, 245, 0.98)' }
       })
     };
 

@@ -811,6 +811,21 @@
   border-radius: var(--radius-sm);
 }
 
+/* 固定列：时期 + 年份 — 确保不被右侧列覆盖 */
+.matrix-table-wrapper .ant-table-cell-fix-left {
+  z-index: 3 !important;
+  background: var(--archive-paper) !important;
+}
+
+.matrix-table-wrapper .ant-table-thead .ant-table-cell-fix-left {
+  background: var(--archive-bg-medium) !important;
+}
+
+/* 时期列（第一个固定列）更高优先级 */
+.matrix-table-wrapper .ant-table-cell-fix-left-first {
+  z-index: 4 !important;
+}
+
 .matrix-table-wrapper .ant-table-thead > tr > th {
   padding: 6px 6px !important;
   background: var(--archive-bg-medium) !important;
