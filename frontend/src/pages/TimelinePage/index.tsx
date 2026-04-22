@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Select, Input, Tag, Drawer, Descriptions, Typography, Space, Button, Tooltip, Empty, Table, Spin, Modal } from 'antd';
+import { Select, Tag, Drawer, Descriptions, Typography, Button, Tooltip, Empty, Table, Spin, Modal } from 'antd';
 import { SearchOutlined, CalendarOutlined, UserOutlined, TeamOutlined, MenuOutlined, CloseOutlined, ExperimentOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import './index.css';
@@ -15,12 +15,12 @@ import { getDetailContent, getSourceTitles } from '../../utils/sourceRegistry';
 const { Title } = Typography;
 
 const HISTORICAL_PERIODS = [
-  { key: '01', name: '鸦片战争时期', years: '1839-1860', startYear: 1839, endYear: 1860, color: '#f5222d', description: '林则徐禁烟、鸦片战争、南京条约、太平天国、第二次鸦片战争' },
-  { key: '02', name: '洋务运动时期', years: '1861-1894', startYear: 1861, endYear: 1894, color: '#1890ff', description: '总理衙门设立、洋务运动推行、江南制造总局、中法战争、甲午战争爆发' },
-  { key: '03', name: '甲午战后时期', years: '1895-1900', startYear: 1895, endYear: 1900, color: '#fa8c16', description: '马关条约、戊戌变法、义和团运动、八国联军、辛丑条约' },
-  { key: '04', name: '清末新政时期', years: '1901-1911', startYear: 1901, endYear: 1911, color: '#52c41a', description: '清末新政、废除科举、预备立宪、徐锡麟起义、辛亥革命' },
-  { key: '05', name: '民国初期', years: '1912-1926', startYear: 1912, endYear: 1926, color: '#722ed1', description: '民国成立、袁世凯称帝、五四运动、中共成立、北伐战争' },
-  { key: '06', name: '国民政府时期', years: '1927-1949', startYear: 1927, endYear: 1949, color: '#eb2f96', description: '中原大战、长征、遵义会议、西安事变、抗日战争、解放战争' },
+  { key: '01', name: '鸦片战争时期', years: '1839-1860', startYear: 1839, endYear: 1860, color: '#8b5e3c', description: '林则徐禁烟、鸦片战争、南京条约、太平天国、第二次鸦片战争' },
+  { key: '02', name: '洋务运动时期', years: '1861-1894', startYear: 1861, endYear: 1894, color: '#5c7a5c', description: '总理衙门设立、洋务运动推行、江南制造总局、中法战争、甲午战争爆发' },
+  { key: '03', name: '甲午战后时期', years: '1895-1900', startYear: 1895, endYear: 1900, color: '#8b6e4a', description: '马关条约、戊戌变法、义和团运动、八国联军、辛丑条约' },
+  { key: '04', name: '清末新政时期', years: '1901-1911', startYear: 1901, endYear: 1911, color: '#6b7a5c', description: '清末新政、废除科举、预备立宪、徐锡麟起义、辛亥革命' },
+  { key: '05', name: '民国初期', years: '1912-1926', startYear: 1912, endYear: 1926, color: '#7a5c6b', description: '民国成立、袁世凯称帝、五四运动、中共成立、北伐战争' },
+  { key: '06', name: '国民政府时期', years: '1927-1949', startYear: 1927, endYear: 1949, color: '#5c6b7a', description: '中原大战、长征、遵义会议、西安事变、抗日战争、解放战争' },
 ];
 
 const EVENT_TYPE_LABELS: Record<number, string> = {
@@ -31,28 +31,29 @@ const EVENT_TYPE_LABELS: Record<number, string> = {
   5: '事件',
 };
 
+// 事件类型色 — 核心语义色（高饱和，强辨识度）
 const EVENT_TYPE_COLORS: Record<number, string> = {
-  1: '#f5222d',
-  2: '#1890ff',
-  3: '#fa8c16',
-  4: '#52c41a',
-  5: '#722ed1',
+  1: '#c41e3a',  // 朱砂（战争）
+  2: '#1a3a5c',  // 墨蓝（条约）
+  3: '#b8860b',  // 暗金（起义）
+  4: '#2e7d32',  // 深绿（改革）
+  5: '#6a1b9a',  // 深紫（事件）
 };
 
+// 群体色 — 独立色板（中低饱和，与事件类型/时期完全不重叠）
 const GROUP_COLORS: Record<string, string> = {
-  '洋务派': '#2f54eb',
-  '清廷': '#faad14',
-  '太平天国': '#f5222d',
-  '湘淮系': '#13c2c2',
-  '维新派': '#52c41a',
-  '革命派': '#eb2f96',
-  '中国共产党': '#f5222d',
-  '英军': '#1890ff',
-  '国民党': '#fa8c16',
-  '日本侵略军': '#722ed1',
-  '解放军': '#52c41a',
-  '东北军': '#13c2c2',
-  '西北军': '#eb2f96',
+  '洋务派': '#3a7ca5',   // 海蓝
+  '清廷': '#cc8a30',     // 赭橙
+  '太平天国': '#d84315', // 赤陶
+  '湘淮系': '#5a8a3c',   // 橄榄青
+  '维新派': '#6b8cae',   // 灰蓝
+  '革命派': '#b5533a',   // 铁锈红
+  '中国共产党': '#a52040', // 酒红
+  '英军': '#546e7a',     // 蓝灰
+  '国民党': '#cc9933',   // 焦糖
+  '日本侵略军': '#5c5c6e', // 铅灰
+  '东北军': '#8a6d53',   // 深棕褐
+  '西北军': '#9c8c6c',   // 土黄
 };
 
 // 统一获取 ID（兼容 _id 和 id）
@@ -455,17 +456,17 @@ export default function TimelinePage() {
       cols = groups
         .filter(g => groupIdsWithEvents.has(String(g.id)))
         .map(group => ({
-          title: <Tag color={GROUP_COLORS[group.name] || '#666'} style={{ fontSize: 12 }}>{group.name}</Tag>,
+          title: <Tag color={GROUP_COLORS[group.name] || '#666'} style={{ fontSize: 12, margin: 0 }}>{group.name}</Tag>,
           dataIndex: group.id,
           key: group.id,
-          width: 150,
+          width: 120,
           render: (events: Event[] | undefined) => {
             if (!events || events.length === 0) return null;
             return (
               <div className="matrix-cell">
                 {events.map(e => (
                   <Tooltip key={getId(e)} title={`${e.title}\n${dayjs(e.startDate).format('M月D日')}`}>
-                    <Tag color={EVENT_TYPE_COLORS[e.eventType] || '#666'} className={`matrix-event-tag${e.eventLevel ? ' sub-event-tag' : ''}`} onClick={() => setSelectedEvent(e)}>
+                    <Tag color={EVENT_TYPE_COLORS[e.eventType] || '#666'} className="matrix-event-tag" onClick={() => setSelectedEvent(e)}>
                       {e.title}
                     </Tag>
                   </Tooltip>
@@ -483,10 +484,10 @@ export default function TimelinePage() {
         .map(person => {
           const personGroups = groups.filter((g: any) => person.groupIds?.includes(g.id));
           return {
-            title: <Tooltip title={personGroups.map((g: any) => g.name).join('、')}><span style={{ fontWeight: 500 }}>{person.name}</span></Tooltip>,
+            title: <Tooltip title={personGroups.map((g: any) => g.name).join('、')}><span style={{ fontWeight: 500, fontSize: 12 }}>{person.name}</span></Tooltip>,
             dataIndex: getId(person),
             key: getId(person),
-            width: 100,
+            width: 90,
             render: (events: Event[] | undefined) => {
               if (!events || events.length === 0) return null;
               return (
@@ -537,6 +538,17 @@ export default function TimelinePage() {
     return years;
   }, []);
 
+  const viewModeOptions = [
+    { label: '时间×群体', value: 'matrix-group', icon: <CalendarOutlined /> },
+    { label: '时间×人物', value: 'matrix-person', icon: <UserOutlined /> },
+    { label: '按群体', value: 'group', icon: <TeamOutlined /> },
+    { label: '按人物', value: 'person', icon: <UserOutlined /> },
+  ];
+
+  const eventCountText = (viewMode === 'matrix-group' || viewMode === 'matrix-person')
+    ? `共 ${matrixEvents.length} 个事件`
+    : `已加载 ${listEvents.length} / ${listTotal} 个`;
+
   return (
     <div className="timeline-page">
       {isMobile && (
@@ -553,7 +565,7 @@ export default function TimelinePage() {
             <div className="filter-collapsed-bar">
               <span className="filter-summary">
                 {searchText && `搜索: "${searchText}"`}
-                {searchText && startYear !== 1839 && ' · '}
+                {searchText && (startYear !== 1839 || endYear !== 1949) && ' · '}
                 {startYear !== 1839 || endYear !== 1949 ? `${startYear}-${endYear}` : '1839-1949'}
                 {selectedPeriod && ` · ${HISTORICAL_PERIODS.find(p => p.key === selectedPeriod)?.name}`}
                 {eventTypeFilter.length > 0 && ` · ${eventTypeFilter.map(t => EVENT_TYPE_LABELS[t]).join('、')}`}
@@ -564,67 +576,122 @@ export default function TimelinePage() {
             </div>
           ) : (
             <div className="filter-bar">
-              <div className="period-chips">
+              {/* 顶部：时期印章 + 操作按钮 */}
+              <div className="filter-top-row">
                 {HISTORICAL_PERIODS.map(period => (
                   <Tooltip key={period.key} title={`${period.years}: ${period.description}`}>
-                    <div className={`period-chip ${selectedPeriod === period.key ? 'selected' : ''}`}
-                      style={{ backgroundColor: selectedPeriod === period.key ? period.color : `${period.color}20`, borderColor: period.color }}
-                      onClick={() => setSelectedPeriod(selectedPeriod === period.key ? null : period.key)}>
-                      <div className="period-color-bar" style={{ backgroundColor: period.color }} />
-                      <span className="period-name" style={{ color: selectedPeriod === period.key ? '#fff' : period.color }}>{period.name}</span>
-                      <span className="period-years">{period.years}</span>
+                    <div
+                      className={`seal-chip ${selectedPeriod === period.key ? 'seal-active' : ''}`}
+                      style={{
+                        borderColor: selectedPeriod === period.key ? period.color : `${period.color}40`,
+                        color: selectedPeriod === period.key ? period.color : `${period.color}99`,
+                        backgroundColor: selectedPeriod === period.key ? `${period.color}12` : 'transparent',
+                      }}
+                      onClick={() => setSelectedPeriod(selectedPeriod === period.key ? null : period.key)}
+                    >
+                      <span className="seal-name">{period.name}</span>
+                      <span className="seal-years">{period.years}</span>
                     </div>
                   </Tooltip>
                 ))}
-              </div>
-              <div className="filter-row">
-                <div className="filter-left">
-                  <Input placeholder="搜索事件..." prefix={<SearchOutlined />}
-                    value={searchText} onChange={e => setSearchText(e.target.value)}
-                    style={{ width: 200 }} allowClear />
-                  <Select placeholder="起始年份" value={startYear}
-                    onChange={(v) => { setStartYear(v); setSelectedPeriod(null); }}
-                    options={yearOptions} style={{ width: 100 }} />
-                  <Select placeholder="结束年份" value={endYear}
-                    onChange={(v) => { setEndYear(v); setSelectedPeriod(null); }}
-                    options={yearOptions} style={{ width: 100 }} />
-                  <Select mode="multiple" placeholder="事件类型"
-                    value={eventTypeFilter} onChange={setEventTypeFilter}
-                    options={eventTypeOptions} style={{ width: 150 }} allowClear maxTagCount={2} />
-                  <Select mode="multiple" placeholder="群体"
-                    value={groupFilter} onChange={setGroupFilter}
-                    options={groupOptions} style={{ width: 150 }} allowClear maxTagCount={2} />
-                </div>
-                <div className="filter-right">
-                  <Space>
-                    <Tooltip title="配色说明">
-                    <Button type="text" size="small" shape="circle" icon={<QuestionCircleOutlined />}
-                      onClick={() => setLegendVisible(true)} style={{ color: '#999' }} />
+                <div className="filter-top-actions">
+                  <Tooltip title="配色说明">
+                    <Button type="text" size="small" icon={<QuestionCircleOutlined />}
+                      onClick={() => setLegendVisible(true)} className="top-action-btn" />
                   </Tooltip>
-                  <Button type={showSubEvents ? 'primary' : 'default'}
-                      icon={<ExperimentOutlined />} onClick={() => setShowSubEvents(!showSubEvents)}>
-                      {showSubEvents ? '显示子事件' : '隐藏子事件'}
-                    </Button>
-                    <Button type={viewMode === 'matrix-group' ? 'primary' : 'default'}
-                      icon={<CalendarOutlined />} onClick={() => setViewMode('matrix-group')}>时间×群体</Button>
-                    <Button type={viewMode === 'matrix-person' ? 'primary' : 'default'}
-                      icon={<UserOutlined />} onClick={() => setViewMode('matrix-person')}>时间×人物</Button>
-                    <Button type={viewMode === 'group' ? 'primary' : 'default'}
-                      icon={<TeamOutlined />} onClick={() => setViewMode('group')}>按群体</Button>
-                    <Button type={viewMode === 'person' ? 'primary' : 'default'}
-                      icon={<UserOutlined />} onClick={() => setViewMode('person')}>按人物</Button>
-                    {!isMobile && (
-                      <Button type="text" size="small"
-                        icon={<CloseOutlined />}
-                        onClick={() => setFilterCollapsed(true)}
-                        title="收起筛选" />
-                    )}
-                  </Space>
+                  {!isMobile && (
+                    <Button type="text" size="small" icon={<CloseOutlined />}
+                      onClick={() => setFilterCollapsed(true)} className="top-action-btn" title="收起筛选" />
+                  )}
                 </div>
-                <div className="filter-count">
-                  {(viewMode === 'matrix-group' || viewMode === 'matrix-person')
-                    ? `共 ${matrixEvents.length} 个事件`
-                    : `已加载 ${listEvents.length} / ${listTotal} 个事件`}
+              </div>
+
+              {/* 主筛选行 */}
+              <div className="filter-controls-row">
+                <div className="filter-controls-left">
+                  {/* 搜索 */}
+                  <div className="filter-search-box">
+                    <SearchOutlined className="filter-search-icon" />
+                    <input
+                      className="filter-search-input"
+                      placeholder="检索事件…"
+                      value={searchText}
+                      onChange={e => setSearchText(e.target.value)}
+                    />
+                    {searchText && (
+                      <CloseOutlined
+                        className="filter-search-clear"
+                        onClick={() => setSearchText('')}
+                      />
+                    )}
+                  </div>
+                  {/* 年份 */}
+                  <div className="filter-years">
+                    <Select
+                      value={startYear}
+                      onChange={(v) => { setStartYear(v); setSelectedPeriod(null); }}
+                      options={yearOptions}
+                      className="filter-year-select"
+                      suffixIcon={null}
+                      bordered={false}
+                    />
+                    <span className="year-dash">—</span>
+                    <Select
+                      value={endYear}
+                      onChange={(v) => { setEndYear(v); setSelectedPeriod(null); }}
+                      options={yearOptions}
+                      className="filter-year-select"
+                      suffixIcon={null}
+                      bordered={false}
+                    />
+                  </div>
+                  {/* 事件类型 */}
+                  <Select
+                    mode="multiple"
+                    placeholder="事件类型"
+                    value={eventTypeFilter}
+                    onChange={setEventTypeFilter}
+                    options={eventTypeOptions}
+                    allowClear
+                    maxTagCount={2}
+                    className="filter-multi-select"
+                  />
+                  {/* 群体 */}
+                  <Select
+                    mode="multiple"
+                    placeholder="所属群体"
+                    value={groupFilter}
+                    onChange={setGroupFilter}
+                    options={groupOptions}
+                    allowClear
+                    maxTagCount={2}
+                    className="filter-multi-select"
+                  />
+                  {/* 子事件 */}
+                  <Button
+                    type={showSubEvents ? 'primary' : 'default'}
+                    size="small"
+                    onClick={() => setShowSubEvents(!showSubEvents)}
+                    className="filter-sub-btn"
+                  >
+                    {showSubEvents ? '含子事件' : '仅主事件'}
+                  </Button>
+                </div>
+                <div className="filter-controls-right">
+                  {/* 计数 */}
+                  <span className="filter-count">{eventCountText}</span>
+                  {/* 视图切换 */}
+                  <div className="filter-view-tabs">
+                    {viewModeOptions.map(opt => (
+                      <button
+                        key={opt.value}
+                        className={`view-tab-item ${viewMode === opt.value ? 'view-tab-active' : ''}`}
+                        onClick={() => setViewMode(opt.value as any)}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

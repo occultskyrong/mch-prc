@@ -1,0 +1,142 @@
+/* ===== 算法说明页 — 知识卡片 ===== */
+
+.algorithm-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--space-lg);
+  overflow-y: auto;
+}
+
+/* 页面头部 */
+.algo-header {
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 2px solid var(--archive-red);
+}
+
+.algo-title {
+  margin-top: 0 !important;
+  margin-bottom: var(--space-sm) !important;
+  font-size: 26px !important;
+  font-weight: 900 !important;
+  letter-spacing: 2px;
+}
+
+.algo-title .anticon {
+  color: var(--archive-red);
+  margin-right: var(--space-sm);
+}
+
+.algo-subtitle {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  color: var(--archive-ink-faint) !important;
+  font-size: 14px;
+  font-family: var(--font-sans-cn);
+}
+
+.algo-text {
+  margin-bottom: var(--space-xs) !important;
+}
+
+.algo-text-secondary {
+  margin-bottom: var(--space-sm) !important;
+}
+
+/* 公式代码块 */
+.algo-formula {
+  background: var(--archive-ink) !important;
+  color: var(--archive-bg-light) !important;
+  padding: 2px 8px !important;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono) !important;
+  font-size: 13px !important;
+}
+
+/* 五史观网格 */
+.perspectives-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-sm);
+}
+
+.perspective-card {
+  padding: var(--space-sm);
+  background: var(--archive-bg-medium);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid;
+  transition: all var(--transition-fast);
+}
+
+.perspective-card:hover {
+  box-shadow: var(--archive-shadow-sm);
+  transform: translateY(-1px);
+}
+
+.perspective-tag {
+  font-size: 13px !important;
+  padding: 1px 8px !important;
+  margin-bottom: var(--space-xs);
+  font-family: var(--font-serif-cn) !important;
+  font-weight: 600 !important;
+}
+
+.perspective-desc {
+  font-size: 13px;
+  color: var(--archive-ink-light);
+  margin-bottom: var(--space-xs);
+}
+
+.perspective-dims {
+  font-size: 11px;
+  color: var(--archive-ink-faint);
+}
+
+/* 权重进度条 */
+.algo-weight-bar {
+  width: 80px;
+}
+
+/* 评分标准表格 */
+.algo-type-tag {
+  font-family: var(--font-serif-cn) !important;
+  font-weight: 600 !important;
+}
+
+/* 分数分段标签 */
+.score-range-tag {
+  font-family: var(--font-mono) !important;
+  font-weight: 600 !important;
+}
+
+/* 计算公式步骤 */
+.formula-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.formula-step {
+  font-size: 14px;
+  padding: var(--space-xs) 0;
+  border-bottom: 1px dashed var(--archive-bg-dark);
+}
+
+.formula-step:last-child {
+  border-bottom: none;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .algorithm-page {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .algo-title {
+    font-size: 20px !important;
+  }
+
+  .perspectives-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,9 +1,7 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu } from 'antd';
+import { Menu } from 'antd';
 import { CalendarOutlined, ExperimentOutlined } from '@ant-design/icons';
 import './index.css';
-
-const { Header, Content } = Layout;
 
 export default function LayoutWrapper() {
   const navigate = useNavigate();
@@ -15,19 +13,25 @@ export default function LayoutWrapper() {
   ];
 
   return (
-    <Layout className="layout-container" style={{ minHeight: '100vh' }}>
-      <Header style={{ display: 'flex', alignItems: 'center', padding: '0 24px', background: '#fff', borderBottom: '1px solid #f0f0f0' }}>
-        <Menu
-          mode="horizontal"
-          selectedKeys={[location.pathname === '/' ? '/timeline' : location.pathname]}
-          items={menuItems}
-          onClick={({ key }) => navigate(key)}
-          style={{ flex: 1, border: 'none' }}
-        />
-      </Header>
-      <Content>
+    <div className="layout-container">
+      <header className="archive-header">
+        <div className="archive-header-inner">
+          <div className="archive-logo">
+            <span className="archive-logo-cn">中国近代史</span>
+            <span className="archive-logo-years">1839—1949</span>
+          </div>
+          <Menu
+            mode="horizontal"
+            selectedKeys={[location.pathname === '/' ? '/timeline' : location.pathname]}
+            items={menuItems}
+            onClick={({ key }) => navigate(key)}
+            className="archive-menu"
+          />
+        </div>
+      </header>
+      <main className="archive-content">
         <Outlet />
-      </Content>
-    </Layout>
+      </main>
+    </div>
   );
 }

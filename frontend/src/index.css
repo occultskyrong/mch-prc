@@ -1,21 +1,330 @@
-/* 全局样式 */
+/* ===== 档案室主题系统 ===== */
+
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /* 纸张色调 */
+  --archive-bg-light: #f7f2e9;
+  --archive-bg-medium: #ede5d5;
+  --archive-bg-dark: #e0d5c1;
+  --archive-paper: rgba(255, 252, 245, 0.92);
+
+  /* 墨色 */
+  --archive-ink: #2c2420;
+  --archive-ink-light: #4a3f38;
+  --archive-ink-faint: #8a7e74;
+  --archive-ink-ghost: #c4b8a8;
+
+  /* 强调色 */
+  --archive-red: #c41e3a;
+  --archive-red-light: #e8384f;
+  --archive-red-faint: rgba(196, 30, 58, 0.08);
+  --archive-blue: #1a3a5c;
+  --archive-blue-light: #2a5a8c;
+  --archive-gold: #b8943e;
+  --archive-gold-light: #d4b46a;
+
+  /* 事件类型色 — 档案风格 */
+  --event-war: #c41e3a;    /* 朱砂 */
+  --event-treaty: #1a3a5c; /* 墨蓝 */
+  --event-uprising: #b8943e; /* 古金 */
+  --event-reform: #3d8b3d; /* 竹青 */
+  --event-other: #6b4c8a;  /* 紫檀 */
+
+  /* 阴影 */
+  --archive-shadow-sm: 0 1px 2px rgba(44, 36, 32, 0.06), 0 2px 6px rgba(44, 36, 32, 0.03);
+  --archive-shadow: 0 1px 4px rgba(44, 36, 32, 0.08), 0 4px 12px rgba(44, 36, 32, 0.04);
+  --archive-shadow-lg: 0 2px 8px rgba(44, 36, 32, 0.12), 0 8px 24px rgba(44, 36, 32, 0.06);
+
+  /* 字体 */
+  --font-serif-cn: 'Noto Serif SC', 'Songti SC', serif;
+  --font-sans-cn: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-mono: 'Source Code Pro', 'Courier New', monospace;
+
+  /* 间距 */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* 圆角 */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  /* 过渡 */
+  --transition-fast: 150ms ease;
+  --transition: 250ms ease;
+  --transition-slow: 400ms ease;
 }
 
-* {
+/* ===== 基础 Reset ===== */
+
+*, *::before, *::after {
   box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   margin: 0;
-  min-width: 320px;
+  font-family: var(--font-sans-cn);
+  color: var(--archive-ink);
+  background-color: var(--archive-bg-light);
+  background-image:
+    linear-gradient(180deg, rgba(240, 232, 216, 0.4) 0%, transparent 60%),
+    repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(184, 148, 62, 0.03) 40px, rgba(184, 148, 62, 0.03) 41px);
   min-height: 100vh;
-  background: #f5f5f5;
 }
 
 #root {
   height: 100vh;
+}
+
+/* ===== 全局 Typography ===== */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif-cn);
+  color: var(--archive-ink);
+  font-weight: 700;
+}
+
+a {
+  color: var(--archive-blue);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--archive-red);
+}
+
+/* ===== Ant Design 全局覆盖 ===== */
+
+.ant-layout {
+  background: var(--archive-bg-light) !important;
+}
+
+.ant-layout-header {
+  background: var(--archive-paper) !important;
+  backdrop-filter: blur(8px);
+}
+
+.ant-menu {
+  background: transparent !important;
+  font-family: var(--font-sans-cn) !important;
+}
+
+.ant-menu-item {
+  font-weight: 500 !important;
+  color: var(--archive-ink-light) !important;
+}
+
+.ant-menu-item-selected {
+  color: var(--archive-red) !important;
+}
+
+.ant-menu-item-selected::after {
+  border-bottom-color: var(--archive-red) !important;
+}
+
+/* 卡片 */
+.ant-card {
+  background: var(--archive-paper) !important;
+  border: 1px solid var(--archive-bg-dark) !important;
+  box-shadow: var(--archive-shadow-sm) !important;
+}
+
+.ant-card:hover {
+  box-shadow: var(--archive-shadow) !important;
+}
+
+/* 按钮 */
+.ant-btn-primary {
+  background: var(--archive-red) !important;
+  border-color: var(--archive-red) !important;
+}
+
+.ant-btn-primary:hover {
+  background: var(--archive-red-light) !important;
+  border-color: var(--archive-red-light) !important;
+}
+
+.ant-btn-default:hover {
+  color: var(--archive-red) !important;
+  border-color: var(--archive-red) !important;
+}
+
+/* 表格 */
+.ant-table {
+  font-family: var(--font-sans-cn) !important;
+  color: var(--archive-ink) !important;
+}
+
+.ant-table-thead > tr > th {
+  background: var(--archive-bg-medium) !important;
+  color: var(--archive-ink-light) !important;
+  font-family: var(--font-serif-cn) !important;
+  font-weight: 600 !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: var(--archive-bg-medium) !important;
+}
+
+.ant-table-tbody > tr > td {
+  border-color: var(--archive-bg-dark) !important;
+}
+
+/* Tag */
+.ant-tag {
+  font-family: var(--font-sans-cn) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+/* Select */
+.ant-select-dropdown {
+  font-family: var(--font-sans-cn) !important;
+}
+
+/* Drawer */
+.ant-drawer-content {
+  background: var(--archive-bg-light) !important;
+}
+
+.ant-drawer-header {
+  background: var(--archive-paper) !important;
+  border-bottom: 1px solid var(--archive-bg-dark) !important;
+}
+
+.ant-drawer-title {
+  font-family: var(--font-serif-cn) !important;
+  color: var(--archive-ink) !important;
+}
+
+/* Modal */
+.ant-modal-content {
+  background: var(--archive-paper) !important;
+  border: 1px solid var(--archive-bg-dark) !important;
+}
+
+.ant-modal-header {
+  background: var(--archive-paper) !important;
+  border-bottom: 1px solid var(--archive-bg-dark) !important;
+}
+
+.ant-modal-title {
+  font-family: var(--font-serif-cn) !important;
+  color: var(--archive-ink) !important;
+}
+
+/* Input */
+.ant-input {
+  font-family: var(--font-sans-cn) !important;
+  color: var(--archive-ink) !important;
+}
+
+.ant-input:focus,
+.ant-input-focused {
+  border-color: var(--archive-red) !important;
+  box-shadow: 0 0 0 2px var(--archive-red-faint) !important;
+}
+
+/* Progress */
+.ant-progress-text {
+  font-family: var(--font-mono) !important;
+  color: var(--archive-ink) !important;
+}
+
+/* Collapse */
+.ant-collapse {
+  background: transparent !important;
+  border-color: var(--archive-bg-dark) !important;
+}
+
+.ant-collapse-header {
+  color: var(--archive-ink-light) !important;
+  font-family: var(--font-serif-cn) !important;
+}
+
+.ant-collapse-content {
+  border-color: var(--archive-bg-dark) !important;
+}
+
+/* Spin */
+.ant-spin-text {
+  color: var(--archive-ink-faint) !important;
+  font-family: var(--font-serif-cn) !important;
+}
+
+/* Empty */
+.ant-empty-description {
+  color: var(--archive-ink-faint) !important;
+  font-family: var(--font-serif-cn) !important;
+}
+
+/* Descriptions */
+.ant-descriptions-item-label {
+  color: var(--archive-ink-faint) !important;
+  font-weight: 500 !important;
+}
+
+.ant-descriptions-item-content {
+  color: var(--archive-ink) !important;
+}
+
+/* Tooltip */
+.ant-tooltip-inner {
+  font-family: var(--font-sans-cn) !important;
+  background: var(--archive-ink) !important;
+}
+
+/* Pagination */
+.ant-pagination-item-active {
+  border-color: var(--archive-red) !important;
+}
+
+.ant-pagination-item-active a {
+  color: var(--archive-red) !important;
+}
+
+/* ===== 滚动条 ===== */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--archive-bg-medium);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--archive-ink-ghost);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--archive-ink-faint);
+}
+
+/* ===== 工具类 ===== */
+
+.archive-year {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--archive-blue);
+}
+
+.archive-text {
+  color: var(--archive-ink-light);
+}
+
+.archive-text-faint {
+  color: var(--archive-ink-faint);
 }

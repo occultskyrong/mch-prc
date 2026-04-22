@@ -1,33 +1,146 @@
+/* ===== 档案室导航栏 ===== */
+
 .layout-container {
   height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* 紧凑表格单元格 */
-.layout-container .ant-table-small .ant-table-cell {
+/* 头部 */
+.archive-header {
+  background: var(--archive-paper);
+  border-bottom: 3px double var(--archive-red);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.archive-header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  height: 56px;
+}
+
+/* Logo */
+.archive-logo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+  cursor: default;
+  user-select: none;
+}
+
+.archive-logo-cn {
+  font-family: var(--font-serif-cn);
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--archive-ink);
+  letter-spacing: 2px;
+}
+
+.archive-logo-years {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--archive-ink-faint);
+  letter-spacing: 1px;
+}
+
+/* 菜单 */
+.archive-menu {
+  flex: 1;
+  border: none !important;
+  background: transparent !important;
+  line-height: 56px !important;
+}
+
+.archive-menu.ant-menu-horizontal {
+  border-bottom: none !important;
+}
+
+.archive-menu .ant-menu-item {
+  font-family: var(--font-sans-cn) !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  color: var(--archive-ink-light) !important;
+  height: 56px !important;
+  line-height: 56px !important;
+  transition: color var(--transition-fast) !important;
+}
+
+.archive-menu .ant-menu-item:hover {
+  color: var(--archive-blue) !important;
+}
+
+.archive-menu .ant-menu-item-selected {
+  color: var(--archive-red) !important;
+  font-weight: 700 !important;
+}
+
+.archive-menu .ant-menu-item-selected::after {
+  bottom: 0 !important;
+  border-bottom: 2px solid var(--archive-red) !important;
+}
+
+/* 内容区 */
+.archive-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== 紧凑表格单元格 ===== */
+.archive-content .ant-table-small .ant-table-cell {
   padding: 4px 8px !important;
 }
 
-.layout-container .ant-table-small .ant-table-thead > tr > th {
+.archive-content .ant-table-small .ant-table-thead > tr > th {
   padding: 6px 8px !important;
 }
 
-/* 紧凑 Card 内容 */
-.layout-container .ant-card-small .ant-card-body {
+/* ===== 紧凑 Card 内容 ===== */
+.archive-content .ant-card-small .ant-card-body {
   padding: 12px !important;
 }
 
-/* 紧凑 Typography 间距 */
-.layout-container .ant-typography {
+/* ===== 紧凑 Typography 间距 ===== */
+.archive-content .ant-typography {
   margin-bottom: 0.5em !important;
 }
 
-/* 紧凑 Collapse */
-.layout-container .ant-collapse-small .ant-collapse-header {
+/* ===== 紧凑 Collapse ===== */
+.archive-content .ant-collapse-small .ant-collapse-header {
   padding: 6px 12px !important;
 }
 
-.layout-container .ant-collapse-small .ant-collapse-content-box {
+.archive-content .ant-collapse-small .ant-collapse-content-box {
   padding: 8px 12px !important;
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+  .archive-header-inner {
+    padding: 0 var(--space-md);
+    gap: var(--space-md);
+  }
+
+  .archive-logo-cn {
+    font-size: 16px;
+  }
+
+  .archive-logo-years {
+    display: none;
+  }
+
+  .archive-menu .ant-menu-item {
+    font-size: 13px !important;
+    padding: 0 12px !important;
+  }
 }

@@ -106,3 +106,9 @@ interface EventDetailField {
 ## 关联项目
 
 - **ai-foundation**: AI 基座服务，PTS Server 通过 `/admin/ai/*` 代理
+
+## 前端开发规则
+
+- **所有前端相关任务（改样式、加组件、重构 UI、调整布局等）必须先调用 `frontend-design` 技能**
+- 技能通过 `Skill` 工具调用，在任何前端代码修改之前执行
+- 不要依赖默认行为或经验判断，显式调用该技能
