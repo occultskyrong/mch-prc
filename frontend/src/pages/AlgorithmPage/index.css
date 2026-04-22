@@ -58,7 +58,7 @@
   font-size: 13px !important;
 }
 
-/* 五史观网格 */
+/* 五史观网格 — 带深度感 */
 .perspectives-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -68,11 +68,12 @@
 .perspective-card {
   position: relative;
   padding: var(--space-sm) var(--space-sm) var(--space-sm) calc(var(--space-sm) + 4px);
-  background: var(--archive-bg-medium);
+  background: linear-gradient(135deg, var(--archive-bg-medium) 0%, rgba(237, 229, 213, 0.7) 100%);
   border-radius: var(--radius-sm);
   border-left: 3px solid;
-  transition: all var(--transition-fast);
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   overflow: hidden;
+  box-shadow: 0 1px 2px rgba(44, 36, 32, 0.03);
 }
 
 .perspective-card::before {
@@ -87,9 +88,20 @@
   pointer-events: none;
 }
 
+.perspective-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  pointer-events: none;
+}
+
 .perspective-card:hover {
-  box-shadow: var(--archive-shadow-sm);
-  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(44, 36, 32, 0.08);
+  transform: translateY(-2px);
 }
 
 .perspective-number {
@@ -146,12 +158,34 @@
 
 .formula-step {
   font-size: 14px;
-  padding: var(--space-xs) 0;
+  padding: var(--space-sm);
   border-bottom: 1px dashed var(--archive-bg-dark);
+  background: var(--archive-bg-medium);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-xs);
 }
 
 .formula-step:last-child {
   border-bottom: none;
+}
+
+/* 页面头部 */
+.algo-header {
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 2px solid var(--archive-red);
+  position: relative;
+}
+
+.algo-header::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--archive-red);
+  opacity: 0.3;
 }
 
 /* 响应式 */

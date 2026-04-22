@@ -77,8 +77,26 @@ body {
   color: var(--archive-ink);
   background-color: var(--archive-bg-light);
   background-image:
-    linear-gradient(180deg, rgba(240, 232, 216, 0.4) 0%, transparent 60%),
-    repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(184, 148, 62, 0.03) 40px, rgba(184, 148, 62, 0.03) 41px);
+    /* 顶部暖光 */
+    radial-gradient(ellipse at 30% 0%, rgba(240, 232, 216, 0.6) 0%, transparent 60%),
+    /* 纸张纤维纹理 — 水平细线 */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(184, 148, 62, 0.015) 3px,
+      rgba(184, 148, 62, 0.015) 4px
+    ),
+    /* 纸张纤维纹理 — 垂直细线 */
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 5px,
+      rgba(138, 126, 116, 0.01) 5px,
+      rgba(138, 126, 116, 0.01) 6px
+    ),
+    /* 对角轻微泛黄 */
+    linear-gradient(135deg, rgba(210, 190, 155, 0.12) 0%, transparent 50%, rgba(210, 190, 155, 0.06) 100%);
   min-height: 100vh;
 }
 

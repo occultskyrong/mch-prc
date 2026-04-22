@@ -38,9 +38,10 @@
   margin-bottom: var(--space-lg);
   padding-bottom: var(--space-md);
   border-bottom: 2px solid var(--archive-bg-dark);
+  position: relative;
 }
 
-/* 印章 */
+/* 印章 — 更立体的效果 */
 .detail-seal {
   width: 56px;
   height: 56px;
@@ -50,15 +51,16 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: var(--archive-red-faint);
+  background: linear-gradient(135deg, var(--archive-red-faint), rgba(196, 30, 58, 0.04));
   transform: rotate(-3deg);
   transition: all var(--transition-fast);
   cursor: default;
+  box-shadow: 0 1px 3px rgba(196, 30, 58, 0.08);
 }
 
 .detail-seal:hover {
   transform: rotate(0deg) scale(1.05);
-  box-shadow: 0 2px 8px rgba(196, 30, 58, 0.15);
+  box-shadow: 0 2px 12px rgba(196, 30, 58, 0.12);
 }
 
 .seal-text {
@@ -204,6 +206,12 @@
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-xs) 0;
+  transition: background 0.15s ease;
+  border-radius: var(--radius-sm);
+}
+
+.impact-dim-row:hover {
+  background: var(--archive-bg-medium);
 }
 
 .impact-dim-label {
@@ -246,10 +254,25 @@
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-sm) 0;
-  border-bottom: 1px solid var(--archive-bg-dark);
+  border-bottom: 1px dashed var(--archive-bg-dark);
   text-decoration: none !important;
   color: inherit;
   transition: all var(--transition-fast);
+  position: relative;
+}
+
+.subevent-link::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--archive-ink-ghost);
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity 0.15s ease;
 }
 
 .subevent-link:last-child {
@@ -259,6 +282,10 @@
 .subevent-link:hover {
   padding-left: var(--space-xs);
   color: var(--archive-red);
+}
+
+.subevent-link:hover::before {
+  opacity: 1;
 }
 
 .subevent-type-tag {

@@ -447,11 +447,18 @@ export default function TimelinePage() {
             return (
               <div className="matrix-cell">
                 {events.map(e => (
-                  <Tooltip key={getId(e)} title={`${e.title}\n${dayjs(e.startDate).format('M月D日')}`}>
-                    <Tag color={EVENT_TYPE_COLORS[e.eventType] || '#666'} className="matrix-event-tag" onClick={() => setSelectedEvent(e)}>
-                      {e.title}
-                    </Tag>
-                  </Tooltip>
+                  <div key={getId(e)} className="matrix-event-row">
+                    {e.impactFactor?.finalScore && (
+                      <span className={`matrix-score-badge matrix-score-badge-${e.impactFactor.finalScore >= 700 ? 'high' : e.impactFactor.finalScore >= 500 ? 'mid' : 'low'}`}>
+                        {e.impactFactor.finalScore}
+                      </span>
+                    )}
+                    <Tooltip title={`${e.title}\n${dayjs(e.startDate).format('M月D日')}${e.impactFactor?.finalScore ? ` | 影响力 ${e.impactFactor.finalScore}` : ''}`}>
+                      <Tag color={EVENT_TYPE_COLORS[e.eventType] || '#666'} className="matrix-event-tag" onClick={() => setSelectedEvent(e)}>
+                        {e.title}
+                      </Tag>
+                    </Tooltip>
+                  </div>
                 ))}
               </div>
             );
@@ -475,11 +482,18 @@ export default function TimelinePage() {
               return (
                 <div className="matrix-cell">
                   {events.map(e => (
-                    <Tooltip key={getId(e)} title={`${e.title}\n${dayjs(e.startDate).format('M月D日')}`}>
-                      <Tag color={EVENT_TYPE_COLORS[e.eventType] || '#666'} className="matrix-event-tag" onClick={() => setSelectedEvent(e)}>
-                        {e.title}
-                      </Tag>
-                    </Tooltip>
+                    <div key={getId(e)} className="matrix-event-row">
+                      {e.impactFactor?.finalScore && (
+                        <span className={`matrix-score-badge matrix-score-badge-${e.impactFactor.finalScore >= 700 ? 'high' : e.impactFactor.finalScore >= 500 ? 'mid' : 'low'}`}>
+                          {e.impactFactor.finalScore}
+                        </span>
+                      )}
+                      <Tooltip title={`${e.title}\n${dayjs(e.startDate).format('M月D日')}${e.impactFactor?.finalScore ? ` | 影响力 ${e.impactFactor.finalScore}` : ''}`}>
+                        <Tag color={EVENT_TYPE_COLORS[e.eventType] || '#666'} className="matrix-event-tag" onClick={() => setSelectedEvent(e)}>
+                          {e.title}
+                        </Tag>
+                      </Tooltip>
+                    </div>
                   ))}
                 </div>
               );
@@ -736,13 +750,13 @@ export default function TimelinePage() {
                       {grpEvents.map(event => (
                         <div key={getId(event)} className={`event-card-mini${event.eventLevel ? ' sub-event' : ''}`} style={{ '--event-color': EVENT_TYPE_COLORS[event.eventType] || '#666' } as React.CSSProperties} onClick={() => setSelectedEvent(event)}>
                           <span className="event-year">{dayjs(event.startDate).format('YYYY年M月')}</span>
-                    <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</Tag>
-                          <span className="event-title">{event.title}</span>
                           {event.impactFactor?.finalScore && (
-                            <span className={`event-score event-score-${event.impactFactor.finalScore >= 700 ? 'high' : event.impactFactor.finalScore >= 500 ? 'mid' : 'low'}`}>
+                            <span className={`score-badge score-badge-${event.impactFactor.finalScore >= 700 ? 'high' : event.impactFactor.finalScore >= 500 ? 'mid' : 'low'}`}>
                               {event.impactFactor.finalScore}
                             </span>
                           )}
+                    <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</Tag>
+                          <span className="event-title">{event.title}</span>
                         </div>
                       ))}
                     </div>
@@ -766,13 +780,13 @@ export default function TimelinePage() {
                       {pEvents.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()).map(event => (
                         <div key={getId(event)} className={`event-card-mini${event.eventLevel ? ' sub-event' : ''}`} style={{ '--event-color': EVENT_TYPE_COLORS[event.eventType] || '#666' } as React.CSSProperties} onClick={() => setSelectedEvent(event)}>
                           <span className="event-year">{dayjs(event.startDate).format('YYYY年M月')}</span>
-                    <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</Tag>
-                          <span className="event-title">{event.title}</span>
                           {event.impactFactor?.finalScore && (
-                            <span className={`event-score event-score-${event.impactFactor.finalScore >= 700 ? 'high' : event.impactFactor.finalScore >= 500 ? 'mid' : 'low'}`}>
+                            <span className={`score-badge score-badge-${event.impactFactor.finalScore >= 700 ? 'high' : event.impactFactor.finalScore >= 500 ? 'mid' : 'low'}`}>
                               {event.impactFactor.finalScore}
                             </span>
                           )}
+                    <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</Tag>
+                          <span className="event-title">{event.title}</span>
                         </div>
                       ))}
                     </div>
