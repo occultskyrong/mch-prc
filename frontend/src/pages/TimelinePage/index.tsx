@@ -58,6 +58,7 @@ export default function TimelinePage() {
   const [groupFilter, setGroupFilter] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'matrix-group' | 'matrix-person' | 'group' | 'person'>('matrix-group');
   const [showSubEvents, setShowSubEvents] = useState(false);
+  const [minScore, setMinScore] = useState<number | null>(null);
   const [legendVisible, setLegendVisible] = useState(false);
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -256,15 +257,24 @@ export default function TimelinePage() {
           return false;
         }
       }
+      if (minScore !== null && e.impactFactor?.finalScore !== undefined) {
+        if (e.impactFactor.finalScore < minScore) return false;
+      }
       return true;
     });
   };
+
+  // 矩阵视图：客户端分数过滤
+  const filteredMatrixEvents = useMemo(() => {
+    if (minScore === null) return matrixEvents;
+    return matrixEvents.filter(e => e.impactFactor?.finalScore !== undefined && e.impactFactor.finalScore >= minScore);
+  }, [matrixEvents, minScore]);
 
   // 矩阵数据（时间×群体）
   const matrixByYearGroup = useMemo(() => {
     const rows: any[] = [];
     const yearsWithEvents = new Set<number>();
-    matrixEvents.forEach(e => yearsWithEvents.add(new Date(e.startDate).getFullYear()));
+    filteredMatrixEvents.forEach(e => yearsWithEvents.add(new Date(e.startDate).getFullYear()));
     const sortedYears = Array.from(yearsWithEvents).sort((a, b) => a - b);
 
     sortedYears.forEach(year => {
@@ -283,24 +293,24 @@ export default function TimelinePage() {
       rows.push(rowData);
     });
     return rows;
-  }, [groups, persons, matrixEvents]);
+  }, [groups, persons, filteredMatrixEvents]);
 
   // 矩阵数据（时间×人物）
   const matrixByYearPerson = useMemo(() => {
     const rows: any[] = [];
     const yearsWithEvents = new Set<number>();
-    matrixEvents.forEach(e => yearsWithEvents.add(new Date(e.startDate).getFullYear()));
+    filteredMatrixEvents.forEach(e => yearsWithEvents.add(new Date(e.startDate).getFullYear()));
     const sortedYears = Array.from(yearsWithEvents).sort((a, b) => a - b);
 
     const involvedPersonIds = new Set<string>();
-    matrixEvents.forEach(e => (e.personIds || []).forEach((pid: any) => involvedPersonIds.add(getId(pid))));
+    filteredMatrixEvents.forEach(e => (e.personIds || []).forEach((pid: any) => involvedPersonIds.add(getId(pid))));
     const involvedPersons = persons.filter(p => involvedPersonIds.has(getId(p))).slice(0, 30);
 
     sortedYears.forEach(year => {
       const period = getPeriodByYear(year);
       const rowData: any = { key: year, year, period };
       involvedPersons.forEach(person => {
-        const yearEvents = matrixEvents.filter(e => {
+        const yearEvents = filteredMatrixEvents.filter(e => {
           const eventYear = new Date(e.startDate).getFullYear();
           const eventPersonIds = (e.personIds || []).map((pid: any) => getId(pid));
           return eventYear === year && eventPersonIds.includes(getId(person));
@@ -310,7 +320,7 @@ export default function TimelinePage() {
       rows.push(rowData);
     });
     return rows;
-  }, [persons, matrixEvents]);
+  }, [persons, filteredMatrixEvents]);
 
   const matrixDataSource = useMemo(() => {
     return viewMode === 'matrix-group' ? matrixByYearGroup : matrixByYearPerson;
@@ -330,7 +340,7 @@ export default function TimelinePage() {
       });
     });
     return Object.values(map).filter(g => g.events.length > 0);
-  }, [listEvents, groups, persons, groupFilter]);
+  }, [listEvents, groups, persons, groupFilter, minScore]);
 
   // 按人物分组（列表视图）
   const eventsByPerson = useMemo(() => {
@@ -420,7 +430,7 @@ export default function TimelinePage() {
     let cols: any[] = [];
     if (viewMode === 'matrix-group') {
       const groupIdsWithEvents = new Set<string>();
-      matrixEvents.forEach(e => {
+      filteredMatrixEvents.forEach(e => {
         const eventPersonIds = (e.personIds || []).map((pid: any) => getId(pid));
         const eventPersons = persons.filter(p => eventPersonIds.includes(getId(p)));
         eventPersons.forEach((p: any) => (p.groupIds || []).forEach((gid: any) => groupIdsWithEvents.add(String(gid))));
@@ -449,7 +459,7 @@ export default function TimelinePage() {
         }));
     } else {
       const involvedPersonIds = new Set<string>();
-      matrixEvents.forEach(e => (e.personIds || []).forEach(pid => involvedPersonIds.add(getId(pid))));
+      filteredMatrixEvents.forEach(e => (e.personIds || []).forEach(pid => involvedPersonIds.add(getId(pid))));
       cols = persons
         .filter(p => involvedPersonIds.has(getId(p)))
         .slice(0, 30)
@@ -479,7 +489,7 @@ export default function TimelinePage() {
     }
 
     return [periodCol, yearCol, ...cols];
-  }, [groups, persons, matrixEvents, viewMode, matrixDataSource]);
+  }, [groups, persons, filteredMatrixEvents, viewMode, matrixDataSource]);
 
   // 获取事件的参与人物（personIds 可能被 populate 为对象数组）
   const getEventPersons = (event: Event) => {
@@ -519,7 +529,7 @@ export default function TimelinePage() {
   ];
 
   const eventCountText = (viewMode === 'matrix-group' || viewMode === 'matrix-person')
-    ? `共 ${matrixEvents.length} 个事件`
+    ? `共 ${filteredMatrixEvents.length} 个事件`
     : `已加载 ${listEvents.length} / ${listTotal} 个`;
 
   return (
@@ -543,6 +553,7 @@ export default function TimelinePage() {
                 {selectedPeriod && ` · ${HISTORICAL_PERIODS.find(p => p.key === selectedPeriod)?.name}`}
                 {eventTypeFilter.length > 0 && ` · ${eventTypeFilter.map(t => EVENT_TYPE_LABELS[t]).join('、')}`}
                 {groupFilter.length > 0 && ` · ${groupFilter.map(gid => groups.find(g => String(g.id) === String(gid))?.name).join('、')}`}
+                {minScore && ` · 影响力≥${minScore}`}
               </span>
               <Button type="text" size="small" icon={<MenuOutlined />}
                 onClick={() => setFilterCollapsed(false)} title="展开筛选" />
@@ -640,6 +651,23 @@ export default function TimelinePage() {
                     maxTagCount={2}
                     className="filter-multi-select"
                   />
+                  {/* 影响力分数 */}
+                  <Select
+                    placeholder="最低影响力分"
+                    value={minScore}
+                    onChange={setMinScore}
+                    allowClear
+                    className="filter-score-select"
+                    options={[
+                      { label: '≥ 900', value: 900 },
+                      { label: '≥ 800', value: 800 },
+                      { label: '≥ 700', value: 700 },
+                      { label: '≥ 600', value: 600 },
+                      { label: '≥ 500', value: 500 },
+                      { label: '≥ 400', value: 400 },
+                      { label: '≥ 300', value: 300 },
+                    ]}
+                  />
                   {/* 子事件 */}
                   <Button
                     type={showSubEvents ? 'primary' : 'default'}
@@ -688,7 +716,7 @@ export default function TimelinePage() {
                 <div className="loading-indicator"><Spin tip="加载更多..." /></div>
               )}
               {!hasMoreMatrix && (
-                <div className="no-more">— 已加载全部 {matrixEvents.length} 个事件 —</div>
+                <div className="no-more">— 已加载全部 {filteredMatrixEvents.length} 个事件 —</div>
               )}
             </div>
           )
@@ -710,6 +738,11 @@ export default function TimelinePage() {
                           <span className="event-year">{dayjs(event.startDate).format('YYYY年M月')}</span>
                     <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</Tag>
                           <span className="event-title">{event.title}</span>
+                          {event.impactFactor?.finalScore && (
+                            <span className={`event-score event-score-${event.impactFactor.finalScore >= 700 ? 'high' : event.impactFactor.finalScore >= 500 ? 'mid' : 'low'}`}>
+                              {event.impactFactor.finalScore}
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -735,6 +768,11 @@ export default function TimelinePage() {
                           <span className="event-year">{dayjs(event.startDate).format('YYYY年M月')}</span>
                     <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</Tag>
                           <span className="event-title">{event.title}</span>
+                          {event.impactFactor?.finalScore && (
+                            <span className={`event-score event-score-${event.impactFactor.finalScore >= 700 ? 'high' : event.impactFactor.finalScore >= 500 ? 'mid' : 'low'}`}>
+                              {event.impactFactor.finalScore}
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>

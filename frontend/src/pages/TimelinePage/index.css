@@ -306,6 +306,26 @@
   box-shadow: 0 0 0 2px var(--archive-red-faint) !important;
 }
 
+/* 影响力分数筛选 */
+.filter-score-select {
+  width: 110px;
+}
+
+.filter-score-select .ant-select-selector {
+  background: var(--archive-bg-medium) !important;
+  border: 1px solid var(--archive-bg-dark) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: none !important;
+  font-family: var(--font-mono) !important;
+  font-size: 12px !important;
+  color: var(--archive-red) !important;
+}
+
+.filter-score-select.ant-select-focused .ant-select-selector {
+  border-color: var(--archive-red) !important;
+  box-shadow: 0 0 0 2px var(--archive-red-faint) !important;
+}
+
 /* 子事件按钮 */
 .filter-sub-btn {
   font-family: var(--font-serif-cn) !important;
@@ -687,6 +707,33 @@
   font-size: 13px;
   font-family: var(--font-mono);
   min-width: 50px;
+}
+
+/* 影响力分数徽章 */
+.event-score {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.event-score-high {
+  color: #b8943e;
+  background: rgba(184, 148, 62, 0.1);
+}
+
+.event-score-mid {
+  color: #1a3a5c;
+  background: rgba(26, 58, 92, 0.08);
+}
+
+.event-score-low {
+  color: var(--archive-ink-faint);
+  background: rgba(138, 126, 116, 0.06);
 }
 
 /* ===== 事件详情抽屉 ===== */
