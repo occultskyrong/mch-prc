@@ -10,7 +10,7 @@ import { groupService } from '../../services/groupService';
 import { sourceService } from '../../services/sourceService';
 import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import { Event, SourceEntry } from '../../types/event';
-import { getDetailContent, getSourceTitles } from '../../utils/sourceRegistry';
+import { getDetailContent } from '../../utils/sourceRegistry';
 import { EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, getId, extractSourceTitles } from '../../constants';
 
 const { Title } = Typography;
@@ -249,7 +249,7 @@ export default function TimelinePage() {
   const filterEventsByGroupAndPerson = (events: Event[]) => {
     return events.filter(e => {
       if (groupFilter.length > 0) {
-        const eventPersonIds = e.personIds || [];
+        const eventPersonIds = (e.personIds || []).map(pid => getId(pid));
         const eventPersons = persons.filter(p => eventPersonIds.includes(getId(p)));
         const eventGroupIds = eventPersons.flatMap((p: any) => p.groupIds || []);
         if (!eventGroupIds.some((gid: any) => groupFilter.includes(String(gid)))) {
@@ -322,7 +322,7 @@ export default function TimelinePage() {
     const map: Record<string, { group: any; events: Event[] }> = {};
     groups.forEach(g => { map[g.id] = { group: g, events: [] }; });
     filtered.forEach(e => {
-      const eventPersonIds = e.personIds || [];
+      const eventPersonIds = (e.personIds || []).map(pid => getId(pid));
       const eventPersons = persons.filter(p => eventPersonIds.includes(getId(p)));
       const eventGroupIds = eventPersons.flatMap((p: any) => p.groupIds || []);
       eventGroupIds.forEach((gid: any) => {
@@ -337,7 +337,7 @@ export default function TimelinePage() {
     const filtered = filterEventsByGroupAndPerson(listEvents);
     const map: Record<string, { person: any; events: Event[] }> = {};
     filtered.forEach(e => {
-      const eventPersonIds = e.personIds || [];
+      const eventPersonIds = (e.personIds || []).map(pid => getId(pid));
       eventPersonIds.forEach(pid => {
         const key = String(pid);
         if (!map[key]) {
@@ -453,7 +453,7 @@ export default function TimelinePage() {
         }));
     } else {
       const involvedPersonIds = new Set<string>();
-      matrixEvents.forEach(e => e.personIds?.forEach(pid => involvedPersonIds.add(String(pid))));
+      matrixEvents.forEach(e => (e.personIds || []).forEach(pid => involvedPersonIds.add(getId(pid))));
       cols = persons
         .filter(p => involvedPersonIds.has(getId(p)))
         .slice(0, 30)
@@ -485,9 +485,10 @@ export default function TimelinePage() {
     return [periodCol, yearCol, ...cols];
   }, [groups, persons, matrixEvents, viewMode, matrixDataSource]);
 
-  // 获取事件的参与人物
+  // 获取事件的参与人物（personIds 可能被 populate 为对象数组）
   const getEventPersons = (event: Event) => {
-    return persons.filter(p => event.personIds?.includes(getId(p)));
+    const eventPersonIds = (event.personIds || []).map(pid => getId(pid));
+    return persons.filter(p => eventPersonIds.includes(getId(p)));
   };
 
   // 获取人物的群体
@@ -775,32 +776,32 @@ export default function TimelinePage() {
               {getDetailContent(selectedEvent.detail?.motive) && (
                 <Descriptions.Item label="动机">
                   {getDetailContent(selectedEvent.detail?.motive)}
-                  {extractSourceTitles(selectedEvent.detail?.motive).map(s => (
-                    <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
+                  {extractSourceTitles(selectedEvent.detail?.motive, sources).map(s => (
+                    <Tag key={s} color="#b8943e" className="source-tag" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
                   ))}
                 </Descriptions.Item>
               )}
               {getDetailContent(selectedEvent.detail?.process) && (
                 <Descriptions.Item label="经过">
                   {getDetailContent(selectedEvent.detail?.process)}
-                  {extractSourceTitles(selectedEvent.detail?.process).map(s => (
-                    <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
+                  {extractSourceTitles(selectedEvent.detail?.process, sources).map(s => (
+                    <Tag key={s} color="#b8943e" className="source-tag" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
                   ))}
                 </Descriptions.Item>
               )}
               {getDetailContent(selectedEvent.detail?.result) && (
                 <Descriptions.Item label="结果">
                   {getDetailContent(selectedEvent.detail?.result)}
-                  {extractSourceTitles(selectedEvent.detail?.result).map(s => (
-                    <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
+                  {extractSourceTitles(selectedEvent.detail?.result, sources).map(s => (
+                    <Tag key={s} color="#b8943e" className="source-tag" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
                   ))}
                 </Descriptions.Item>
               )}
               {getDetailContent(selectedEvent.detail?.impact) && (
                 <Descriptions.Item label="影响">
                   {getDetailContent(selectedEvent.detail?.impact)}
-                  {extractSourceTitles(selectedEvent.detail?.impact).map(s => (
-                    <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
+                  {extractSourceTitles(selectedEvent.detail?.impact, sources).map(s => (
+                    <Tag key={s} color="#b8943e" className="source-tag" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
                   ))}
                 </Descriptions.Item>
               )}

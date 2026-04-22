@@ -27,7 +27,7 @@ export const getId = (obj: any): string => String(obj._id ?? obj.id ?? '');
 export const extractSourceTitles = (field: any, sources: SourceEntry[]): string[] => {
   const ids = !field || typeof field === 'string' ? [] : (field.sourceIds || []);
   return ids
-    .map((id: string) => sources.find(s => s._id === id || s.id === id))
+    .map((id: number) => sources.find(s => s.id === id))
     .filter(Boolean)
     .map((s: SourceEntry) => s.title);
 };

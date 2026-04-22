@@ -1,5 +1,3 @@
-import { EventDetailField } from '../types/event';
-
 /** 批量获取来源名称 */
 export function getSourceTitles(sourceIds: number[], sources: { id: number; title: string }[]): string[] {
   return sourceIds
@@ -7,16 +5,53 @@ export function getSourceTitles(sourceIds: number[], sources: { id: number; titl
     .filter((t): t is string => !!t);
 }
 
-/** 获取详情字段的内容（兼容新旧格式） */
-export function getDetailContent(field: EventDetailField | string | undefined): string {
+/** 获取详情字段的内容（兼容新旧格式及异常存储格式） */
+export function getDetailContent(field: any): string {
   if (!field) return '';
-  return typeof field === 'string' ? field : field.content;
+  if (typeof field === 'string') return field;
+  if (typeof field === 'object' && 'content' in field) return field.content;
+  // 异常格式：数组形式（MongoDB 存储/序列化问题）
+  if (Array.isArray(field)) {
+    return field.map((item: any) => {
+      if (typeof item === 'string') return item;
+      if (typeof item === 'object' && item.content) return item.content;
+      // 字符索引格式：{ "0": "英", "1": "国", ... }
+      if (typeof item === 'object') {
+        const chars = Object.entries(item)
+          .filter(([k]) => /^\d+$/.test(k))
+          .sort(([a], [b]) => Number(a) - Number(b))
+          .map(([, v]) => v)
+          .join('');
+        return chars;
+      }
+      return '';
+    }).join('');
+  }
+  // 字符索引格式的单个对象
+  if (typeof field === 'object') {
+    const hasNumericKeys = Object.keys(field).some(k => /^\d+$/.test(k));
+    if (hasNumericKeys) {
+      return Object.entries(field)
+        .filter(([k]) => /^\d+$/.test(k))
+        .sort(([a], [b]) => Number(a) - Number(b))
+        .map(([, v]) => v)
+        .join('');
+    }
+  }
+  return '';
 }
 
-/** 获取详情字段的来源 ID（兼容新旧格式） */
-export function getDetailSourceIds(field: EventDetailField | string | undefined): number[] {
+/** 获取详情字段的来源 ID（兼容新旧格式及异常存储格式） */
+export function getDetailSourceIds(field: any): number[] {
   if (!field || typeof field === 'string') return [];
-  return field.sourceIds || [];
+  if (Array.isArray(field)) {
+    return field.flatMap((item: any) => {
+      if (typeof item === 'object' && item.sourceIds) return item.sourceIds || [];
+      return [];
+    });
+  }
+  if (typeof field === 'object' && field.sourceIds) return field.sourceIds || [];
+  return [];
 }
 
 /** 统计各来源被多少事件引用 */

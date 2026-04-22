@@ -208,7 +208,7 @@ async function importEvents(personIdMap: Record<number, string>) {
 
   // 第一遍：创建所有事件（不处理关联）
   for (const e of events) {
-    const existing = await Event.findOne({ title: e.title });
+    const existing = await Event.findOne({ title: e.title, startDate: new Date(e.startDate) });
     if (existing) {
       skipped++;
       continue;
@@ -277,7 +277,7 @@ async function importEvents(personIdMap: Record<number, string>) {
 
     if (mongoPersonIds.length === 0) continue;
 
-    const event = await Event.findOne({ title: e.title });
+    const event = await Event.findOne({ title: e.title, startDate: new Date(e.startDate) });
     if (event) {
       await Event.updateOne(
         { _id: event._id },

@@ -9,7 +9,7 @@ import { personService } from '../../services/personService';
 import { sourceService } from '../../services/sourceService';
 import { Event, SourceEntry } from '../../types/event';
 import { DIMENSION_LABELS } from '../../utils/impactFactor';
-import { getDetailContent, getSourceTitles } from '../../utils/sourceRegistry';
+import { getDetailContent } from '../../utils/sourceRegistry';
 import { EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, getId, extractSourceTitles } from '../../constants';
 
 const { Title } = Typography;
@@ -158,7 +158,7 @@ export default function EventDetailPage() {
             {getDetailContent(event.detail.motive) && (
               <Descriptions.Item label="动机">
                 {getDetailContent(event.detail.motive)}
-                {extractSourceTitles(event.detail.motive).map(s => (
+                {extractSourceTitles(event.detail.motive, sources).map(s => (
                   <Tag key={s} color="#b8943e" className="source-tag">{s}</Tag>
                 ))}
               </Descriptions.Item>
@@ -166,7 +166,7 @@ export default function EventDetailPage() {
             {getDetailContent(event.detail.process) && (
               <Descriptions.Item label="经过">
                 {getDetailContent(event.detail.process)}
-                {extractSourceTitles(event.detail.process).map(s => (
+                {extractSourceTitles(event.detail.process, sources).map(s => (
                   <Tag key={s} color="#b8943e" className="source-tag">{s}</Tag>
                 ))}
               </Descriptions.Item>
@@ -174,7 +174,7 @@ export default function EventDetailPage() {
             {getDetailContent(event.detail.result) && (
               <Descriptions.Item label="结果">
                 {getDetailContent(event.detail.result)}
-                {extractSourceTitles(event.detail.result).map(s => (
+                {extractSourceTitles(event.detail.result, sources).map(s => (
                   <Tag key={s} color="#b8943e" className="source-tag">{s}</Tag>
                 ))}
               </Descriptions.Item>
@@ -182,7 +182,7 @@ export default function EventDetailPage() {
             {getDetailContent(event.detail.impact) && (
               <Descriptions.Item label="影响">
                 {getDetailContent(event.detail.impact)}
-                {extractSourceTitles(event.detail.impact).map(s => (
+                {extractSourceTitles(event.detail.impact, sources).map(s => (
                   <Tag key={s} color="#b8943e" className="source-tag">{s}</Tag>
                 ))}
               </Descriptions.Item>
