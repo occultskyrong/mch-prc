@@ -441,7 +441,7 @@ export default function TimelinePage() {
         );
       },
       onCell: () => ({
-        style: { position: 'sticky', left: 40, zIndex: 9, background: '#fff' }
+        style: { position: 'sticky', left: 40, zIndex: 9, background: 'rgba(255, 252, 245, 0.98)' }
       })
     };
 

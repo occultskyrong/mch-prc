@@ -131,9 +131,10 @@ export default function AlgorithmPage() {
         size="small"
       >
         <div className="perspectives-grid">
-          {FIVE_PERSPECTIVES.map(p => (
+          {FIVE_PERSPECTIVES.map((p, i) => (
             <div key={p.name} className="perspective-card" style={{ borderLeftColor: p.color }}>
-              <Tag color={p.color} className="perspective-tag">{p.name}</Tag>
+              <div className="perspective-number" style={{ color: p.color }}>〇{i + 1}</div>
+              <div className="perspective-name" style={{ color: p.color }}>{p.name}</div>
               <div className="perspective-desc">{p.desc}</div>
               <div className="perspective-dims">
                 对应维度：{p.dims.join('、')}

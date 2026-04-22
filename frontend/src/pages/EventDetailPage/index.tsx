@@ -77,12 +77,30 @@ export default function EventDetailPage() {
         <ArrowLeftOutlined /> 返回时间轴
       </Link>
 
-      <Title level={2} className="detail-title">{event.title}</Title>
-      <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} className="detail-type-tag">
-        {EVENT_TYPE_LABELS[event.eventType] || event.eventType}
-      </Tag>
+      {/* 卷宗头部 */}
+      <div className="detail-header">
+        <div className="detail-seal">
+          <span className="seal-text">{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</span>
+        </div>
+        <div className="detail-header-text">
+          <Title level={2} className="detail-title">{event.title}</Title>
+          <div className="detail-meta-line">
+            <span className="detail-meta">{dayjs(event.startDate).format('YYYY年M月D日')}</span>
+            {event.location && (
+              <>
+                <span className="detail-meta-divider">·</span>
+                <span className="detail-meta">{event.location}</span>
+              </>
+            )}
+            <span className="detail-meta-divider">·</span>
+            <span className="detail-meta detail-score" style={{ color: impact.finalScore >= 700 ? '#b8943e' : impact.finalScore >= 500 ? '#1a3a5c' : '#8a7e74' }}>
+              影响力 {impact.finalScore}
+            </span>
+          </div>
+        </div>
+      </div>
 
-      <Card title="基本信息" className="archive-card" size="small">
+      <Card title="档案摘要" className="archive-card" size="small">
         <Descriptions column={2} bordered size="small">
           <Descriptions.Item label="时间">
             {new Date(event.startDate).toLocaleDateString('zh-CN')}
@@ -95,7 +113,7 @@ export default function EventDetailPage() {
           <div className="detail-persons">
             <span className="detail-persons-label">参与人物：</span>
             {eventPersons.map(p => (
-              <Tag key={p._id} color="blue">{p.name}</Tag>
+              <Tag key={p._id} color="#1a3a5c">{p.name}</Tag>
             ))}
           </div>
         )}
@@ -157,7 +175,7 @@ export default function EventDetailPage() {
               <Descriptions.Item label="动机">
                 {getDetailContent(event.detail.motive)}
                 {getDetailSourceTitles(event.detail.motive).map(s => (
-                  <Tag key={s} color="blue" className="source-tag">{s}</Tag>
+                  <Tag key={s} color="#b8943e" className="source-tag">{s}</Tag>
                 ))}
               </Descriptions.Item>
             )}
@@ -165,7 +183,7 @@ export default function EventDetailPage() {
               <Descriptions.Item label="经过">
                 {getDetailContent(event.detail.process)}
                 {getDetailSourceTitles(event.detail.process).map(s => (
-                  <Tag key={s} color="blue" className="source-tag">{s}</Tag>
+                  <Tag key={s} color="#b8943e" className="source-tag">{s}</Tag>
                 ))}
               </Descriptions.Item>
             )}
@@ -173,7 +191,7 @@ export default function EventDetailPage() {
               <Descriptions.Item label="结果">
                 {getDetailContent(event.detail.result)}
                 {getDetailSourceTitles(event.detail.result).map(s => (
-                  <Tag key={s} color="blue" className="source-tag">{s}</Tag>
+                  <Tag key={s} color="#b8943e" className="source-tag">{s}</Tag>
                 ))}
               </Descriptions.Item>
             )}
@@ -181,7 +199,7 @@ export default function EventDetailPage() {
               <Descriptions.Item label="影响">
                 {getDetailContent(event.detail.impact)}
                 {getDetailSourceTitles(event.detail.impact).map(s => (
-                  <Tag key={s} color="blue" className="source-tag">{s}</Tag>
+                  <Tag key={s} color="#b8943e" className="source-tag">{s}</Tag>
                 ))}
               </Descriptions.Item>
             )}

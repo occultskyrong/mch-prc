@@ -144,6 +144,31 @@ a:hover {
   box-shadow: var(--archive-shadow) !important;
 }
 
+/* ===== 档案卡片 ===== */
+
+.archive-card .ant-card-head {
+  border-bottom: 1px solid var(--archive-bg-dark) !important;
+  padding: 0 var(--space-md) !important;
+  min-height: 40px !important;
+}
+
+.archive-card .ant-card-head-title {
+  font-family: var(--font-serif-cn) !important;
+  font-weight: 700 !important;
+  color: var(--archive-ink) !important;
+  font-size: 15px !important;
+}
+
+.archive-card .ant-card-body {
+  padding: var(--space-md) !important;
+}
+
+/* ===== 档案卡片 — 影响力强调 ===== */
+
+.archive-card-impact {
+  border-left: 3px solid var(--archive-red) !important;
+}
+
 /* 按钮 */
 .ant-btn-primary {
   background: var(--archive-red) !important;
@@ -294,6 +319,11 @@ a:hover {
 }
 
 /* ===== 滚动条 ===== */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--archive-ink-ghost) var(--archive-bg-medium);
+}
 
 ::-webkit-scrollbar {
   width: 6px;

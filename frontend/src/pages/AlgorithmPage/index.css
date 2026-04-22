@@ -56,16 +56,30 @@
 /* 五史观网格 */
 .perspectives-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: var(--space-sm);
 }
 
 .perspective-card {
-  padding: var(--space-sm);
+  position: relative;
+  padding: var(--space-sm) var(--space-sm) var(--space-sm) calc(var(--space-sm) + 4px);
   background: var(--archive-bg-medium);
   border-radius: var(--radius-sm);
   border-left: 3px solid;
   transition: all var(--transition-fast);
+  overflow: hidden;
+}
+
+.perspective-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  opacity: 0.04;
+  background: radial-gradient(circle, currentColor 30%, transparent 70%);
+  pointer-events: none;
 }
 
 .perspective-card:hover {
@@ -73,23 +87,32 @@
   transform: translateY(-1px);
 }
 
-.perspective-tag {
-  font-size: 13px !important;
-  padding: 1px 8px !important;
+.perspective-number {
+  font-size: 11px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  margin-bottom: 2px;
+  opacity: 0.6;
+}
+
+.perspective-name {
+  font-size: 15px;
+  font-family: var(--font-serif-cn);
+  font-weight: 700;
   margin-bottom: var(--space-xs);
-  font-family: var(--font-serif-cn) !important;
-  font-weight: 600 !important;
 }
 
 .perspective-desc {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--archive-ink-light);
   margin-bottom: var(--space-xs);
+  line-height: 1.5;
 }
 
 .perspective-dims {
   font-size: 11px;
-  color: var(--archive-ink-faint);
+  color: var(--archive-ink-ghost);
+  font-family: var(--font-sans-cn);
 }
 
 /* 权重进度条 */
@@ -133,10 +156,36 @@
   }
 
   .algo-title {
-    font-size: 20px !important;
+    font-size: 18px !important;
+  }
+
+  .algo-subtitle {
+    font-size: 13px !important;
   }
 
   .perspectives-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-xs);
+  }
+
+  .perspective-card {
+    padding: var(--space-xs);
+  }
+
+  .perspective-name {
+    font-size: 14px;
+  }
+
+  .algo-weight-bar {
+    width: 60px;
+  }
+
+  .formula-step {
+    font-size: 13px;
+  }
+
+  .impact-dim-label {
+    width: 48px;
+    font-size: 11px;
   }
 }
