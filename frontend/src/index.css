@@ -232,6 +232,18 @@ a:hover {
   color: var(--archive-ink) !important;
 }
 
+.ant-drawer-extra {
+  font-family: var(--font-sans-cn) !important;
+}
+
+.ant-drawer-body {
+  background: var(--archive-bg-light) !important;
+}
+
+.ant-descriptions {
+  font-family: var(--font-sans-cn) !important;
+}
+
 /* Modal */
 .ant-modal-content {
   background: var(--archive-paper) !important;
@@ -301,6 +313,15 @@ a:hover {
 
 .ant-descriptions-item-content {
   color: var(--archive-ink) !important;
+}
+
+.ant-descriptions-bordered .ant-descriptions-view > table {
+  border-color: var(--archive-bg-dark) !important;
+}
+
+.ant-descriptions-bordered .ant-descriptions-item-label,
+.ant-descriptions-bordered .ant-descriptions-item-content {
+  border-color: var(--archive-bg-dark) !important;
 }
 
 /* Tooltip */

@@ -11,6 +11,7 @@ import { sourceService } from '../../services/sourceService';
 import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import { Event, SourceEntry } from '../../types/event';
 import { getDetailContent, getSourceTitles } from '../../utils/sourceRegistry';
+import { EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, getId, extractSourceTitles } from '../../constants';
 
 const { Title } = Typography;
 
@@ -22,23 +23,6 @@ const HISTORICAL_PERIODS = [
   { key: '05', name: '民国初期', years: '1912-1926', startYear: 1912, endYear: 1926, color: '#7a5c6b', description: '民国成立、袁世凯称帝、五四运动、中共成立、北伐战争' },
   { key: '06', name: '国民政府时期', years: '1927-1949', startYear: 1927, endYear: 1949, color: '#5c6b7a', description: '中原大战、长征、遵义会议、西安事变、抗日战争、解放战争' },
 ];
-
-const EVENT_TYPE_LABELS: Record<number, string> = {
-  1: '战争',
-  2: '条约',
-  3: '起义',
-  4: '改革',
-  5: '事件',
-};
-
-// 事件类型色 — 核心语义色（高饱和，强辨识度）
-const EVENT_TYPE_COLORS: Record<number, string> = {
-  1: '#c41e3a',  // 朱砂（战争）
-  2: '#1a3a5c',  // 墨蓝（条约）
-  3: '#b8860b',  // 暗金（起义）
-  4: '#2e7d32',  // 深绿（改革）
-  5: '#6a1b9a',  // 深紫（事件）
-};
 
 // 群体色 — 独立色板（中低饱和，与事件类型/时期完全不重叠）
 const GROUP_COLORS: Record<string, string> = {
@@ -55,9 +39,6 @@ const GROUP_COLORS: Record<string, string> = {
   '东北军': '#8a6d53',   // 深棕褐
   '西北军': '#9c8c6c',   // 土黄
 };
-
-// 统一获取 ID（兼容 _id 和 id）
-const getId = (obj: any): string => String(obj._id ?? obj.id ?? '');
 
 export default function TimelinePage() {
   const [persons, setPersons] = useState<any[]>([]);
@@ -83,11 +64,6 @@ export default function TimelinePage() {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const getDetailSourceTitles = (field: any): string[] => {
-    const ids = !field || typeof field === 'string' ? [] : (field.sourceIds || []);
-    return getSourceTitles(ids, sources);
-  };
 
   // 移动端检测
   useEffect(() => {
@@ -733,7 +709,7 @@ export default function TimelinePage() {
                     </div>
                     <div className="group-events">
                       {grpEvents.map(event => (
-                        <div key={getId(event)} className={`event-card-mini${event.eventLevel ? ' sub-event' : ''}`} onClick={() => setSelectedEvent(event)}>
+                        <div key={getId(event)} className={`event-card-mini${event.eventLevel ? ' sub-event' : ''}`} style={{ '--event-color': EVENT_TYPE_COLORS[event.eventType] || '#666' } as React.CSSProperties} onClick={() => setSelectedEvent(event)}>
                           <span className="event-year">{dayjs(event.startDate).format('YYYY年M月')}</span>
                     <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</Tag>
                           <span className="event-title">{event.title}</span>
@@ -758,7 +734,7 @@ export default function TimelinePage() {
                     </div>
                     <div className="person-events">
                       {pEvents.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()).map(event => (
-                        <div key={getId(event)} className={`event-card-mini${event.eventLevel ? ' sub-event' : ''}`} onClick={() => setSelectedEvent(event)}>
+                        <div key={getId(event)} className={`event-card-mini${event.eventLevel ? ' sub-event' : ''}`} style={{ '--event-color': EVENT_TYPE_COLORS[event.eventType] || '#666' } as React.CSSProperties} onClick={() => setSelectedEvent(event)}>
                           <span className="event-year">{dayjs(event.startDate).format('YYYY年M月')}</span>
                     <Tag color={EVENT_TYPE_COLORS[event.eventType] || '#666'} style={{ fontSize: 12 }}>{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</Tag>
                           <span className="event-title">{event.title}</span>
@@ -799,7 +775,7 @@ export default function TimelinePage() {
               {getDetailContent(selectedEvent.detail?.motive) && (
                 <Descriptions.Item label="动机">
                   {getDetailContent(selectedEvent.detail?.motive)}
-                  {getDetailSourceTitles(selectedEvent.detail?.motive).map(s => (
+                  {extractSourceTitles(selectedEvent.detail?.motive).map(s => (
                     <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
                   ))}
                 </Descriptions.Item>
@@ -807,7 +783,7 @@ export default function TimelinePage() {
               {getDetailContent(selectedEvent.detail?.process) && (
                 <Descriptions.Item label="经过">
                   {getDetailContent(selectedEvent.detail?.process)}
-                  {getDetailSourceTitles(selectedEvent.detail?.process).map(s => (
+                  {extractSourceTitles(selectedEvent.detail?.process).map(s => (
                     <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
                   ))}
                 </Descriptions.Item>
@@ -815,7 +791,7 @@ export default function TimelinePage() {
               {getDetailContent(selectedEvent.detail?.result) && (
                 <Descriptions.Item label="结果">
                   {getDetailContent(selectedEvent.detail?.result)}
-                  {getDetailSourceTitles(selectedEvent.detail?.result).map(s => (
+                  {extractSourceTitles(selectedEvent.detail?.result).map(s => (
                     <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
                   ))}
                 </Descriptions.Item>
@@ -823,7 +799,7 @@ export default function TimelinePage() {
               {getDetailContent(selectedEvent.detail?.impact) && (
                 <Descriptions.Item label="影响">
                   {getDetailContent(selectedEvent.detail?.impact)}
-                  {getDetailSourceTitles(selectedEvent.detail?.impact).map(s => (
+                  {extractSourceTitles(selectedEvent.detail?.impact).map(s => (
                     <Tag key={s} color="blue" style={{ marginLeft: 4, fontSize: 10 }}>{s}</Tag>
                   ))}
                 </Descriptions.Item>

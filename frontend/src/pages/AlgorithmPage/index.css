@@ -5,6 +5,11 @@
   margin: 0 auto;
   padding: var(--space-lg);
   overflow-y: auto;
+  padding-bottom: var(--space-2xl);
+}
+
+.algorithm-page > .archive-card {
+  margin-bottom: var(--space-md);
 }
 
 /* 页面头部 */

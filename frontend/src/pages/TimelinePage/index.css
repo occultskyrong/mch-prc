@@ -245,7 +245,7 @@
 }
 
 .filter-year-select {
-  width: 72px;
+  width: 82px;
 }
 
 .filter-year-select .ant-select-selector {
@@ -346,10 +346,17 @@
   transition: all 0.2s;
   white-space: nowrap;
   letter-spacing: 0.3px;
+  outline: none;
 }
 
 .view-tab-item:hover {
   color: var(--archive-ink-light);
+}
+
+.view-tab-item:focus-visible {
+  outline: 2px solid var(--archive-red);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .view-tab-item.view-tab-active {
@@ -599,6 +606,7 @@
   border-radius: var(--radius-md);
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--archive-bg-dark);
+  border-left: 3px solid var(--archive-blue);
   box-shadow: var(--archive-shadow-sm);
 }
 
@@ -652,6 +660,7 @@
   bottom: 0;
   width: 3px;
   border-radius: 2px 0 0 2px;
+  background: var(--event-color, var(--archive-red));
 }
 
 .event-card-mini:hover {

@@ -8,6 +8,7 @@ import {
 } from '@ant-design/icons';
 import './index.css';
 import { SCORING_CRITERIA, DIMENSION_WEIGHTS } from '../../utils/impactFactor';
+import { EVENT_TYPE_COLORS } from '../../constants';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -42,7 +43,7 @@ const CRITERIA_COLUMNS = [
 // 事件类型基准表 — 使用事件类型色
 const TYPE_COLUMNS = [
   { title: '类型', dataIndex: 'type', key: 'type', width: 70, render: (v: string) => {
-    const colors: Record<string, string> = { '战争': '#c41e3a', '条约': '#1a3a5c', '起义': '#b8860b', '改革': '#2e7d32', '事件': '#6a1b9a' };
+    const colors: Record<string, string> = { '战争': EVENT_TYPE_COLORS[1], '条约': EVENT_TYPE_COLORS[2], '起义': EVENT_TYPE_COLORS[3], '改革': EVENT_TYPE_COLORS[4], '事件': EVENT_TYPE_COLORS[5] };
     return <Tag color={colors[v] || '#666'} className="algo-type-tag">{v}</Tag>;
   }},
   { title: '政治', dataIndex: 'p', key: 'p', width: 55 },

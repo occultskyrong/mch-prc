@@ -10,20 +10,9 @@ import { sourceService } from '../../services/sourceService';
 import { Event, SourceEntry } from '../../types/event';
 import { DIMENSION_LABELS } from '../../utils/impactFactor';
 import { getDetailContent, getSourceTitles } from '../../utils/sourceRegistry';
+import { EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, getId, extractSourceTitles } from '../../constants';
 
 const { Title } = Typography;
-
-const EVENT_TYPE_LABELS: Record<number, string> = {
-  1: '战争', 2: '条约', 3: '起义', 4: '改革', 5: '事件',
-};
-
-const EVENT_TYPE_COLORS: Record<number, string> = {
-  1: '#c41e3a',  // 朱砂（战争）
-  2: '#1a3a5c',  // 墨蓝（条约）
-  3: '#b8860b',  // 暗金（起义）
-  4: '#2e7d32',  // 深绿（改革）
-  5: '#6a1b9a',  // 深紫（事件）
-};
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -54,12 +43,7 @@ export default function EventDetailPage() {
     setLoading(false);
   };
 
-  const eventPersons = event?.personIds ? persons.filter(p => event!.personIds!.includes(p._id ?? String(p.id))) : [];
-
-  const getDetailSourceTitles = (field: any): string[] => {
-    const ids = !field || typeof field === 'string' ? [] : (field.sourceIds || []);
-    return getSourceTitles(ids, sources);
-  };
+  const eventPersons = event?.personIds ? persons.filter(p => event!.personIds!.includes(getId(p))) : [];
 
   if (loading) return <div className="loading-placeholder"><Spin tip="加载中..." /></div>;
   if (!event) return <div className="loading-placeholder">未找到事件</div>;
@@ -93,7 +77,7 @@ export default function EventDetailPage() {
               </>
             )}
             <span className="detail-meta-divider">·</span>
-            <span className="detail-meta detail-score" style={{ color: impact.finalScore >= 700 ? '#b8943e' : impact.finalScore >= 500 ? '#1a3a5c' : '#8a7e74' }}>
+            <span className={`detail-meta detail-score detail-score-${impact.finalScore >= 700 ? 'high' : impact.finalScore >= 500 ? 'mid' : 'low'}`}>
               影响力 {impact.finalScore}
             </span>
           </div>
@@ -103,8 +87,8 @@ export default function EventDetailPage() {
       <Card title="档案摘要" className="archive-card" size="small">
         <Descriptions column={2} bordered size="small">
           <Descriptions.Item label="时间">
-            {new Date(event.startDate).toLocaleDateString('zh-CN')}
-            {event.endDate && ` ~ ${new Date(event.endDate).toLocaleDateString('zh-CN')}`}
+            {dayjs(event.startDate).format('YYYY年M月D日')}
+            {event.endDate && ` ~ ${dayjs(event.endDate).format('YYYY年M月D日')}`}
           </Descriptions.Item>
           {event.location && <Descriptions.Item label="地点">{event.location}</Descriptions.Item>}
           <Descriptions.Item label="概述" span={2}>{event.summary}</Descriptions.Item>
@@ -174,7 +158,7 @@ export default function EventDetailPage() {
             {getDetailContent(event.detail.motive) && (
               <Descriptions.Item label="动机">
                 {getDetailContent(event.detail.motive)}
-                {getDetailSourceTitles(event.detail.motive).map(s => (
+                {extractSourceTitles(event.detail.motive).map(s => (
                   <Tag key={s} color="#b8943e" className="source-tag">{s}</Tag>
                 ))}
               </Descriptions.Item>
@@ -182,7 +166,7 @@ export default function EventDetailPage() {
             {getDetailContent(event.detail.process) && (
               <Descriptions.Item label="经过">
                 {getDetailContent(event.detail.process)}
-                {getDetailSourceTitles(event.detail.process).map(s => (
+                {extractSourceTitles(event.detail.process).map(s => (
                   <Tag key={s} color="#b8943e" className="source-tag">{s}</Tag>
                 ))}
               </Descriptions.Item>
@@ -190,7 +174,7 @@ export default function EventDetailPage() {
             {getDetailContent(event.detail.result) && (
               <Descriptions.Item label="结果">
                 {getDetailContent(event.detail.result)}
-                {getDetailSourceTitles(event.detail.result).map(s => (
+                {extractSourceTitles(event.detail.result).map(s => (
                   <Tag key={s} color="#b8943e" className="source-tag">{s}</Tag>
                 ))}
               </Descriptions.Item>
@@ -198,7 +182,7 @@ export default function EventDetailPage() {
             {getDetailContent(event.detail.impact) && (
               <Descriptions.Item label="影响">
                 {getDetailContent(event.detail.impact)}
-                {getDetailSourceTitles(event.detail.impact).map(s => (
+                {extractSourceTitles(event.detail.impact).map(s => (
                   <Tag key={s} color="#b8943e" className="source-tag">{s}</Tag>
                 ))}
               </Descriptions.Item>
