@@ -43,6 +43,10 @@ export default function TimelinePage() {
   const [sources, setSources] = useState<SourceEntry[]>([]);
   const [loadingMeta, setLoadingMeta] = useState(true);
 
+  // 一级阵营（parentId === null）和二级子群体分开使用
+  const primaryGroups = useMemo(() => groups.filter((g: any) => !g.parentId), [groups]);
+  const subGroups = useMemo(() => groups.filter((g: any) => g.parentId), [groups]);
+
   const [headerExpanded, setHeaderExpanded] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [filterCollapsed, setFilterCollapsed] = useState(false);
@@ -267,7 +271,7 @@ export default function TimelinePage() {
     return matrixEvents.filter(e => e.impactFactor?.finalScore !== undefined && e.impactFactor.finalScore >= minScore);
   }, [matrixEvents, minScore]);
 
-  // 矩阵数据（时间×群体）
+  // 矩阵数据（时间×阵营）— 只显示一级阵营
   const matrixByYearGroup = useMemo(() => {
     const rows: any[] = [];
     const yearsWithEvents = new Set<number>();
@@ -277,7 +281,7 @@ export default function TimelinePage() {
     sortedYears.forEach(year => {
       const period = getPeriodByYear(year);
       const rowData: any = { key: year, year, period };
-      groups.forEach(group => {
+      primaryGroups.forEach(group => {
         const groupPersons = persons.filter((p: any) => p.groupIds?.includes(group.id));
         const groupPersonIds = groupPersons.map((p: any) => getId(p));
         const yearEvents = matrixEvents.filter(e => {
@@ -290,7 +294,7 @@ export default function TimelinePage() {
       rows.push(rowData);
     });
     return rows;
-  }, [groups, persons, filteredMatrixEvents]);
+  }, [primaryGroups, persons, filteredMatrixEvents]);
 
   // 矩阵数据（时间×人物）
   const matrixByYearPerson = useMemo(() => {
@@ -323,11 +327,11 @@ export default function TimelinePage() {
     return viewMode === 'matrix-group' ? matrixByYearGroup : matrixByYearPerson;
   }, [viewMode, matrixByYearGroup, matrixByYearPerson]);
 
-  // 按群体分组（列表视图）
+  // 按群体分组（列表视图）— 按一级阵营分组
   const eventsByGroup = useMemo(() => {
     const filtered = filterEventsByGroupAndPerson(listEvents);
     const map: Record<string, { group: any; events: Event[] }> = {};
-    groups.forEach(g => { map[g.id] = { group: g, events: [] }; });
+    primaryGroups.forEach(g => { map[g.id] = { group: g, events: [] }; });
     filtered.forEach(e => {
       const eventPersonIds = (e.personIds || []).map(pid => getId(pid));
       const eventPersons = persons.filter(p => eventPersonIds.includes(getId(p)));
@@ -337,7 +341,7 @@ export default function TimelinePage() {
       });
     });
     return Object.values(map).filter(g => g.events.length > 0);
-  }, [listEvents, groups, persons, groupFilter, minScore]);
+  }, [listEvents, primaryGroups, persons, groupFilter, minScore]);
 
   // 按人物分组（列表视图）
   const eventsByPerson = useMemo(() => {
@@ -426,41 +430,52 @@ export default function TimelinePage() {
 
     let cols: any[] = [];
     if (viewMode === 'matrix-group') {
+      // 矩阵视图只显示一级阵营
       const groupIdsWithEvents = new Set<string>();
       filteredMatrixEvents.forEach(e => {
         const eventPersonIds = (e.personIds || []).map((pid: any) => getId(pid));
         const eventPersons = persons.filter(p => eventPersonIds.includes(getId(p)));
         eventPersons.forEach((p: any) => (p.groupIds || []).forEach((gid: any) => groupIdsWithEvents.add(String(gid))));
       });
-      cols = groups
+      cols = primaryGroups
         .filter(g => groupIdsWithEvents.has(String(g.id)))
-        .map(group => ({
-          title: <Tag color={GROUP_COLORS[group.name] || '#666'} style={{ fontSize: 12, margin: 0 }}>{group.name}</Tag>,
-          dataIndex: group.id,
-          key: group.id,
-          width: 120,
-          render: (events: Event[] | undefined) => {
-            if (!events || events.length === 0) return null;
-            return (
-              <div className="matrix-cell">
-                {events.map(e => (
-                  <div key={getId(e)} className="matrix-event-row">
-                    {e.impactFactor?.finalScore && (
-                      <span className={`matrix-score-badge matrix-score-badge-${e.impactFactor.finalScore >= 700 ? 'high' : e.impactFactor.finalScore >= 500 ? 'mid' : 'low'}`}>
-                        {e.impactFactor.finalScore}
-                      </span>
-                    )}
-                    <Tooltip title={`${e.title}\n${dayjs(e.startDate).format('M月D日')}${e.impactFactor?.finalScore ? ` | 影响力 ${e.impactFactor.finalScore}` : ''}`}>
-                      <Tag color={EVENT_TYPE_COLORS[e.eventType] || '#666'} className="matrix-event-tag" onClick={() => setSelectedEvent(e)}>
-                        {e.title}
-                      </Tag>
-                    </Tooltip>
-                  </div>
-                ))}
-              </div>
-            );
-          }
-        }));
+        .map(group => {
+          // 获取该阵营下的子群体
+          const children = subGroups.filter((s: any) => String(s.parentId) === String(group.id));
+          const childrenNames = children.map((s: any) => s.name);
+          const titleText = childrenNames.length > 0 ? `子群体: ${childrenNames.join('、')}` : '无子群体';
+          return {
+            title: (
+              <Tooltip title={titleText}>
+                <Tag color={GROUP_COLORS[group.name] || '#666'} style={{ fontSize: 12, margin: 0 }}>{group.name}</Tag>
+              </Tooltip>
+            ),
+            dataIndex: group.id,
+            key: group.id,
+            width: 120,
+            render: (events: Event[] | undefined) => {
+              if (!events || events.length === 0) return null;
+              return (
+                <div className="matrix-cell">
+                  {events.map(e => (
+                    <div key={getId(e)} className="matrix-event-row">
+                      {e.impactFactor?.finalScore && (
+                        <span className={`matrix-score-badge matrix-score-badge-${e.impactFactor.finalScore >= 700 ? 'high' : e.impactFactor.finalScore >= 500 ? 'mid' : 'low'}`}>
+                          {e.impactFactor.finalScore}
+                        </span>
+                      )}
+                      <Tooltip title={`${e.title}\n${dayjs(e.startDate).format('M月D日')}${e.impactFactor?.finalScore ? ` | 影响力 ${e.impactFactor.finalScore}` : ''}`}>
+                        <Tag color={EVENT_TYPE_COLORS[e.eventType] || '#666'} className="matrix-event-tag" onClick={() => setSelectedEvent(e)}>
+                          {e.title}
+                        </Tag>
+                      </Tooltip>
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+          };
+        });
     } else {
       const involvedPersonIds = new Set<string>();
       filteredMatrixEvents.forEach(e => (e.personIds || []).forEach(pid => involvedPersonIds.add(getId(pid))));
@@ -468,9 +483,14 @@ export default function TimelinePage() {
         .filter(p => involvedPersonIds.has(getId(p)))
         .slice(0, 30)
         .map(person => {
-          const personGroups = groups.filter((g: any) => person.groupIds?.includes(g.id));
+          // 人物所属的子群体名称
+          const personSubGroups = subGroups.filter((g: any) => person.groupIds?.includes(g.id));
+          const personPrimaryGroups = primaryGroups.filter((g: any) => person.groupIds?.includes(g.id));
+          const tooltipText = personSubGroups.length > 0
+            ? `${person.name} — 群体: ${personSubGroups.map((g: any) => g.name).join('、')}`
+            : `${person.name} — 阵营: ${personPrimaryGroups.map((g: any) => g.name).join('、')}`;
           return {
-            title: <Tooltip title={personGroups.map((g: any) => g.name).join('、')}><span style={{ fontWeight: 500, fontSize: 12 }}>{person.name}</span></Tooltip>,
+            title: <Tooltip title={tooltipText}><span style={{ fontWeight: 500, fontSize: 12 }}>{person.name}</span></Tooltip>,
             dataIndex: getId(person),
             key: getId(person),
             width: 90,
@@ -500,7 +520,7 @@ export default function TimelinePage() {
     }
 
     return [periodCol, yearCol, ...cols];
-  }, [groups, persons, filteredMatrixEvents, viewMode, matrixDataSource]);
+  }, [primaryGroups, subGroups, persons, filteredMatrixEvents, viewMode, matrixDataSource]);
 
   // 获取事件的参与人物（personIds 可能被 populate 为对象数组）
   const getEventPersons = (event: Event) => {
@@ -521,8 +541,8 @@ export default function TimelinePage() {
   }, []);
 
   const groupOptions = useMemo(() => {
-    return groups.map(g => ({ label: g.name, value: String(g.id) }));
-  }, [groups]);
+    return primaryGroups.map(g => ({ label: g.name, value: String(g.id) }));
+  }, [primaryGroups]);
 
   const yearOptions = useMemo(() => {
     const years = [];
@@ -533,9 +553,9 @@ export default function TimelinePage() {
   }, []);
 
   const viewModeOptions = [
-    { label: '时间×群体', value: 'matrix-group', icon: <CalendarOutlined /> },
+    { label: '时间×阵营', value: 'matrix-group', icon: <CalendarOutlined /> },
     { label: '时间×人物', value: 'matrix-person', icon: <UserOutlined /> },
-    { label: '按群体', value: 'group', icon: <TeamOutlined /> },
+    { label: '按阵营', value: 'group', icon: <TeamOutlined /> },
     { label: '按人物', value: 'person', icon: <UserOutlined /> },
   ];
 
@@ -769,7 +789,11 @@ export default function TimelinePage() {
                       <span className="person-name">{person.name}</span>
                       {person.groupIds?.map((gid: any) => {
                         const g = groups.find((gr: any) => String(gr.id) === String(gid));
-                        return g ? <Tag key={gid} color={GROUP_COLORS[g.name] || '#666'} style={{ fontSize: 12 }}>{g.name}</Tag> : null;
+                        // 只显示子群体（二级），不重复显示一级阵营
+                        if (g && g.parentId) {
+                          return <Tag key={gid} color={GROUP_COLORS[g.name] || '#666'} style={{ fontSize: 12 }}>{g.name}</Tag>;
+                        }
+                        return null;
                       })}
                       <span className="person-count">{pEvents.length} 个事件</span>
                     </div>
