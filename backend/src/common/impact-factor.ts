@@ -271,7 +271,6 @@ const KEYWORD_ADJUSTMENTS: Record<string, { dims: string[]; bonus: number }> = {
   '政变': { dims: ['politicalChange', 'historicalTurningPoint'], bonus: 15 },
   '称帝': { dims: ['politicalChange', 'historicalTurningPoint'], bonus: 15 },
   '伪政权': { dims: ['politicalChange'], bonus: 12 },
-  '就任': { dims: ['politicalChange'], bonus: 8 },
   '选举': { dims: ['politicalChange', 'institutionalLegacy'], bonus: 8 },
   '会议': { dims: ['politicalChange'], bonus: 6 },
   '整编': { dims: ['politicalChange'], bonus: 5 },
@@ -333,10 +332,14 @@ const KEYWORD_ADJUSTMENTS: Record<string, { dims: string[]; bonus: number }> = {
   // 经济/商业类
   '经济': { dims: ['economicImpact'], bonus: 10 },
   '工业': { dims: ['economicImpact', 'militaryScale'], bonus: 10 },
+  '重工业': { dims: ['economicImpact', 'militaryScale', 'institutionalLegacy'], bonus: 15 },
+  '钢铁': { dims: ['economicImpact', 'militaryScale'], bonus: 10 },
+  '军工': { dims: ['militaryScale', 'economicImpact', 'institutionalLegacy'], bonus: 12 },
   '商业': { dims: ['economicImpact'], bonus: 8 },
   '贸易': { dims: ['economicImpact', 'internationalRelations'], bonus: 10 },
   '铁路': { dims: ['economicImpact', 'militaryScale'], bonus: 10 },
   '矿山': { dims: ['economicImpact'], bonus: 8 },
+  '煤炭': { dims: ['economicImpact', 'militaryScale'], bonus: 8 },
   '银行': { dims: ['economicImpact', 'institutionalLegacy'], bonus: 8 },
   '通商': { dims: ['economicImpact', 'internationalRelations', 'territorialSovereignty'], bonus: 10 },
   '关税': { dims: ['economicImpact', 'territorialSovereignty'], bonus: 10 },
@@ -399,8 +402,19 @@ const KEYWORD_ADJUSTMENTS: Record<string, { dims: string[]; bonus: number }> = {
   '备战': { dims: ['militaryScale'], bonus: 8 },
   '宣战': { dims: ['militaryScale', 'internationalRelations'], bonus: 12 },
   '停战': { dims: ['militaryScale', 'internationalRelations'], bonus: 8 },
-  '协定': { dims: ['internationalRelations', 'territorialSovereignty'], bonus: 8 },
   '统一战线': { dims: ['militaryScale', 'politicalChange'], bonus: 12 },
+  '野战军': { dims: ['militaryScale', 'historicalTurningPoint'], bonus: 12 },
+  '东北野战军': { dims: ['militaryScale', 'historicalTurningPoint', 'politicalChange'], bonus: 15 },
+  '东野': { dims: ['militaryScale', 'historicalTurningPoint'], bonus: 12 },
+  '四野': { dims: ['militaryScale', 'historicalTurningPoint'], bonus: 12 },
+  '入关': { dims: ['militaryScale', 'politicalChange', 'historicalTurningPoint'], bonus: 12 },
+  '南下': { dims: ['militaryScale', 'politicalChange'], bonus: 8 },
+  '解放': { dims: ['politicalChange', 'historicalTurningPoint'], bonus: 10 },
+  '收复': { dims: ['territorialSovereignty', 'politicalChange'], bonus: 10 },
+  '攻克': { dims: ['militaryScale'], bonus: 10 },
+  '占领': { dims: ['militaryScale', 'politicalChange'], bonus: 8 },
+  '战略': { dims: ['militaryScale', 'historicalTurningPoint'], bonus: 8 },
+  '决战': { dims: ['militaryScale', 'historicalTurningPoint'], bonus: 15 },
 
   // 社会/民生类
   '灾荒': { dims: ['socialStructure', 'economicImpact'], bonus: 10 },
@@ -431,39 +445,26 @@ const KEYWORD_ADJUSTMENTS: Record<string, { dims: string[]; bonus: number }> = {
   '赴任': { dims: ['politicalChange'], bonus: 4 },
   '上任': { dims: ['politicalChange'], bonus: 4 },
   '卸任': { dims: ['politicalChange'], bonus: 3 },
-  '去世': { dims: ['politicalChange'], bonus: 4 },
-  '病逝': { dims: ['politicalChange'], bonus: 4 },
-  '逝世': { dims: ['politicalChange'], bonus: 4 },
   '殉国': { dims: ['politicalChange', 'historicalTurningPoint'], bonus: 10 },
   '牺牲': { dims: ['politicalChange'], bonus: 6 },
-  '就义': { dims: ['politicalChange', 'socialStructure'], bonus: 8 },
   '被俘': { dims: ['militaryScale'], bonus: 5 },
   '处死': { dims: ['politicalChange'], bonus: 6 },
   '杀': { dims: ['politicalChange'], bonus: 4 },
-  '剿灭': { dims: ['militaryScale'], bonus: 10 },
-  '剿': { dims: ['militaryScale'], bonus: 8 },
   '平定': { dims: ['militaryScale', 'politicalChange'], bonus: 8 },
-  '开埠': { dims: ['economicImpact', 'internationalRelations'], bonus: 10 },
   '开市': { dims: ['economicImpact'], bonus: 6 },
   '租界': { dims: ['territorialSovereignty', 'internationalRelations'], bonus: 10 },
   '海关': { dims: ['economicImpact', 'territorialSovereignty'], bonus: 8 },
   '抵制': { dims: ['socialStructure', 'internationalRelations'], bonus: 8 },
   '请愿': { dims: ['politicalChange', 'socialStructure'], bonus: 8 },
-  '运动': { dims: ['ideologicalCultural', 'socialStructure', 'historicalTurningPoint'], bonus: 12 },
-  '思想': { dims: ['ideologicalCultural', 'historicalTurningPoint'], bonus: 15 },
   '传播': { dims: ['ideologicalCultural'], bonus: 6 },
   '倡导': { dims: ['ideologicalCultural'], bonus: 6 },
-  '变法': { dims: ['politicalChange', 'ideologicalCultural'], bonus: 10 },
-  '改革': { dims: ['politicalChange', 'institutionalLegacy'], bonus: 8 },
   '改制': { dims: ['politicalChange', 'institutionalLegacy'], bonus: 6 },
   '新政': { dims: ['politicalChange', 'institutionalLegacy'], bonus: 10 },
   '咨议局': { dims: ['politicalChange', 'institutionalLegacy'], bonus: 8 },
   '国会': { dims: ['politicalChange', 'institutionalLegacy'], bonus: 8 },
-  '选举': { dims: ['politicalChange', 'institutionalLegacy'], bonus: 8 },
   '资政院': { dims: ['politicalChange', 'institutionalLegacy'], bonus: 8 },
   '互保': { dims: ['politicalChange', 'internationalRelations'], bonus: 8 },
   '瓜分': { dims: ['territorialSovereignty', 'internationalRelations'], bonus: 12 },
-  '伪政权': { dims: ['politicalChange'], bonus: 12 },
   '自治': { dims: ['politicalChange'], bonus: 6 },
 
   // 国际/外交/领土类
@@ -523,8 +524,8 @@ function detectScope(location: string): 'nationwide' | 'multiRegion' | 'provinci
     if (location.includes(kw) && location !== '全国各地') return 'nationwide';
   }
 
-  // 跨区域线性地理特征
-  const crossRegionPatterns = ['长江', '沿海', '沿江', '黄河', '运河', '中国沿海'];
+  // 跨区域线性地理特征 & 大区级战略要地
+  const crossRegionPatterns = ['长江', '沿海', '沿江', '黄河', '运河', '中国沿海', '东北', '西北', '西南', '华中', '华北', '华南'];
   for (const kw of crossRegionPatterns) {
     if (location.includes(kw)) return 'multiRegion';
   }

@@ -22,10 +22,6 @@ export interface DimensionScoreDto {
 export interface ImpactFactorDto {
   dimensions: Record<string, DimensionScoreDto>;
   weightedSum: number;
-  scopeBonus: number;
-  scopeLabel: string;
-  durationBonus: number;
-  durationLabel: string;
   finalScore: number;
 }
 

@@ -185,10 +185,6 @@ export class EventsService {
     return {
       dimensions: result.dimensions,
       weightedSum: result.weightedSum,
-      scopeBonus: result.scopeBonus,
-      scopeLabel: '',
-      durationBonus: result.durationBonus,
-      durationLabel: '',
       finalScore: result.finalScore,
     };
   }

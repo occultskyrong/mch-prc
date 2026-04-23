@@ -189,10 +189,14 @@ const KEYWORD_ADJUSTMENTS: Record<string, { dims: string[]; bonus: number }> = {
   '西医': { dims: ['ideologicalCultural'], bonus: 6 },
   '经济': { dims: ['economicImpact'], bonus: 10 },
   '工业': { dims: ['economicImpact', 'militaryScale'], bonus: 10 },
+  '重工业': { dims: ['economicImpact', 'militaryScale', 'institutionalLegacy'], bonus: 15 },
+  '钢铁': { dims: ['economicImpact', 'militaryScale'], bonus: 10 },
+  '军工': { dims: ['militaryScale', 'economicImpact', 'institutionalLegacy'], bonus: 12 },
   '商业': { dims: ['economicImpact'], bonus: 8 },
   '贸易': { dims: ['economicImpact', 'internationalRelations'], bonus: 10 },
   '铁路': { dims: ['economicImpact', 'militaryScale'], bonus: 10 },
   '矿山': { dims: ['economicImpact'], bonus: 8 },
+  '煤炭': { dims: ['economicImpact', 'militaryScale'], bonus: 8 },
   '银行': { dims: ['economicImpact', 'institutionalLegacy'], bonus: 8 },
   '通商': { dims: ['economicImpact', 'internationalRelations', 'territorialSovereignty'], bonus: 10 },
   '关税': { dims: ['economicImpact', 'territorialSovereignty'], bonus: 10 },
@@ -255,6 +259,18 @@ const KEYWORD_ADJUSTMENTS: Record<string, { dims: string[]; bonus: number }> = {
   '停战': { dims: ['militaryScale', 'internationalRelations'], bonus: 8 },
   '协定': { dims: ['internationalRelations', 'territorialSovereignty'], bonus: 8 },
   '统一战线': { dims: ['militaryScale', 'politicalChange'], bonus: 12 },
+  '野战军': { dims: ['militaryScale', 'historicalTurningPoint'], bonus: 12 },
+  '东北野战军': { dims: ['militaryScale', 'historicalTurningPoint', 'politicalChange'], bonus: 15 },
+  '东野': { dims: ['militaryScale', 'historicalTurningPoint'], bonus: 12 },
+  '四野': { dims: ['militaryScale', 'historicalTurningPoint'], bonus: 12 },
+  '入关': { dims: ['militaryScale', 'politicalChange', 'historicalTurningPoint'], bonus: 12 },
+  '南下': { dims: ['militaryScale', 'politicalChange'], bonus: 8 },
+  '解放': { dims: ['politicalChange', 'historicalTurningPoint'], bonus: 10 },
+  '收复': { dims: ['territorialSovereignty', 'politicalChange'], bonus: 10 },
+  '攻克': { dims: ['militaryScale'], bonus: 10 },
+  '占领': { dims: ['militaryScale', 'politicalChange'], bonus: 8 },
+  '战略': { dims: ['militaryScale', 'historicalTurningPoint'], bonus: 8 },
+  '决战': { dims: ['militaryScale', 'historicalTurningPoint'], bonus: 15 },
   '灾荒': { dims: ['socialStructure', 'economicImpact'], bonus: 10 },
   '饥荒': { dims: ['socialStructure'], bonus: 10 },
   '难民': { dims: ['socialStructure'], bonus: 10 },
@@ -342,7 +358,7 @@ function detectScope(location: string): string {
   for (const kw of nationwidePatterns) {
     if (location.includes(kw) && location !== '全国各地') return 'nationwide';
   }
-  const crossRegionPatterns = ['长江', '沿海', '沿江', '黄河', '运河', '中国沿海'];
+  const crossRegionPatterns = ['长江', '沿海', '沿江', '黄河', '运河', '中国沿海', '东北', '西北', '西南', '华中', '华北', '华南'];
   for (const kw of crossRegionPatterns) {
     if (location.includes(kw)) return 'multiRegion';
   }

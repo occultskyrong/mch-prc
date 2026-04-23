@@ -331,9 +331,9 @@ finalScore = Σ(dimensionScore_i × dimensionWeight_i)
 
 | 档位 | 条件 | 加分 |
 |------|------|------|
-| 全国性 (nationwide) | 包含"全国""各省""南北""多省"等 | **+5** |
-| 跨省 (multiRegion) | 包含"长江""沿海""沿江""黄河""运河"，或多城市（含顿号） | **+3** |
-| 省会/府城 (provincial) | 匹配 50+ 历史名城列表 | **+1** |
+| 全国性 (nationwide) | 包含"全国""各省""南北""多省"等 | **+15** |
+| 跨省 (multiRegion) | 包含"长江""沿海""沿江""黄河""运河""中国沿海"，或多城市（含顿号） | **+8** |
+| 省会/府城 (provincial) | 匹配 50+ 历史名城或特定关隘（虎门、大沽口等） | **+3** |
 | 局部 (regional) | 未匹配以上任何条件 | **+0** |
 
 **匹配优先级**：nationwide > multiRegion > provincial > regional
@@ -357,15 +357,42 @@ finalScore = Σ(dimensionScore_i × dimensionWeight_i)
 
 | 档位 | 条件 | 加分（仅影响指定维度） |
 |------|------|------|
-| longTerm | 持续 ≥5 年 或 institutionalLegacy ≥8 | **+5** |
-| midLongTerm | 持续 3-5 年 或 institutionalLegacy ≥7 | **+4** |
-| midTerm | 持续 1-3 年 或 institutionalLegacy ≥6 | **+3** |
-| shortMid | 持续 0.5-1 年 或 institutionalLegacy ≥5 | **+2** |
-| shortTerm | 持续 <0.5 年 或 institutionalLegacy <5 | **+0** |
+| longTerm | 持续 ≥5 年 或 institutionalLegacy ≥80 | **+10** |
+| midLongTerm | 持续 3-5 年 或 institutionalLegacy ≥70 | **+7** |
+| midTerm | 持续 1-3 年 或 institutionalLegacy ≥60 | **+5** |
+| shortMid | 持续 0.5-1 年 或 institutionalLegacy ≥50 | **+3** |
+| shortTerm | 持续 <0.5 年 或 institutionalLegacy <50 | **+0** |
 
 ---
 
-## 八、其他修正项
+## 八、内容丰富度乘数（v2.0 新增）
+
+利用事件的元数据（摘要长度、详情完整度、关联人物等）作为**连续区分因子**，解决纯基准分事件聚集在同一分数的问题。
+
+### 8.1 计算方式
+
+| 维度 | 权重 | 满分条件 |
+|------|------|---------|
+| 摘要长度 | 30% | summary ≥ 300 字 |
+| 详情完整度 | 25% | motive/process/result/impact 四项全有 |
+| 详情内容深度 | 15% | detail 总字数 ≥ 500 字 |
+| 关联人物 | 10% | personIds ≥ 8 人 |
+| 子事件 | 10% | subEvents ≥ 10 个 |
+| 持续时间 | 10% | endDate 距 startDate ≥ 3 年 |
+
+### 8.2 乘数范围
+
+```
+richnessMultiplier = 0.8 + 0.4 × richness
+```
+
+| richness | 乘数 | 说明 |
+|----------|------|------|
+| 0.0（极简） | **0.8x** | 无摘要、无详情、无人物、无子事件 |
+| 0.5（中等） | **1.0x** | 有一定详情和摘要 |
+| 1.0（丰富） | **1.2x** | 所有维度满分 |
+
+## 九、其他修正项
 
 以下修正叠加在基准分上，对所有维度生效。
 
